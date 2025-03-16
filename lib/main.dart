@@ -12,7 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SavedData.init();
   HttpOverrides.global = MyHttpOverrides();
-  runApp(const MyApp());
+  runApp(const MyApp());  
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +22,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo app',
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Event Management app',
         theme: ThemeData.dark(
           useMaterial3: true,
         ).copyWith(textTheme: GoogleFonts.interTextTheme()),
