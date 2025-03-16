@@ -155,11 +155,11 @@ class _CreateEventPageState extends State<CreateEventPage>
           padding: const EdgeInsets.all(12.0),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            SizedBox(
+            const SizedBox(
               height: 50,
             ),
-            CustomHeadText(text: "Create Event"),
-            SizedBox(
+            const CustomHeadText(text: "Create Event"),
+            const SizedBox(
               height: 25,
             ),
             GestureDetector(
@@ -192,7 +192,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                               fit: BoxFit.fill,
                             ),
                           )
-                        : Column(
+                        : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                                 Icon(
@@ -212,7 +212,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                               ]),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -220,7 +220,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                 icon: Icons.event_outlined,
                 label: "Event Name",
                 hint: "Add Event Name"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -229,7 +229,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                 icon: Icons.description_outlined,
                 label: "Description",
                 hint: "Add Description"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -237,7 +237,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                 icon: Icons.location_on_outlined,
                 label: "Location",
                 hint: "Enter Location of Event"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -248,7 +248,7 @@ class _CreateEventPageState extends State<CreateEventPage>
               readOnly: true,
               onTap: () => _selectDateTime(context),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -256,7 +256,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                 icon: Icons.people_outlined,
                 label: "Guests",
                 hint: "Enter list of guests"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -264,16 +264,16 @@ class _CreateEventPageState extends State<CreateEventPage>
                 icon: Icons.attach_money_outlined,
                 label: "Sponsers",
                 hint: "Enter Sponsers"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             Row(
               children: [
-                Text(
+                const Text(
                   "In Person Event",
                   style: TextStyle(color: kLightGreen, fontSize: 20),
                 ),
-                Spacer(),
+                const Spacer(),
                 Switch(
                     activeColor: kLightGreen,
                     focusColor: Colors.green,
@@ -285,7 +285,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                     }),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             SizedBox(
@@ -298,7 +298,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                       _descController.text == "" ||
                       _locationController.text == "" ||
                       _dateTimeController.text == "") {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text(
                             "Event Name,Description,Location,Date & time are must.")));
                   } else {
@@ -316,7 +316,7 @@ class _CreateEventPageState extends State<CreateEventPage>
                               _sponsersController.text))
                           .then((value) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Event Created !!")));
+                            const SnackBar(content: Text("Event Created !!")));
                         Navigator.pop(context);
                       });
                     } else {
@@ -333,13 +333,13 @@ class _CreateEventPageState extends State<CreateEventPage>
                               _sponsersController.text))
                           .then((value) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Event Created !!")));
+                            const SnackBar(content: Text("Event Created !!")));
                         Navigator.pop(context);
                       });
                     }
                   }
                 },
-                child: Text(
+                child: const Text(
                   "Create New Event",
                   style: TextStyle(
                       color: Colors.black,

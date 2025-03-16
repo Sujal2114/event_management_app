@@ -43,7 +43,7 @@ class _RSVPEventsState extends State<RSVPEvents> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("RSVP Events")),
+      appBar: AppBar(title: const Text("RSVP Events")),
       body: ListView.builder(
         itemCount: userEvents.length,
         itemBuilder: (context, index) => Card(
@@ -55,13 +55,13 @@ class _RSVPEventsState extends State<RSVPEvents> {
                         EventDetails(data: userEvents[index]))),
             title: Text(
               userEvents[index].data["name"],
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
             subtitle: Text(
               userEvents[index].data["location"],
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
-            trailing: Icon(
+            trailing: const Icon(
               Icons.check_circle,
               color: kLightGreen,
             ),

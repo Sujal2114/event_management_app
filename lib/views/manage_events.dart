@@ -33,7 +33,7 @@ class _ManageEventsState extends State<ManageEvents> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Manage Events")),
+      appBar: AppBar(title: const Text("Manage Events")),
       body: ListView.builder(
         itemCount: userCreatedEvents.length,
         itemBuilder: (context, index) => Card(
@@ -45,11 +45,11 @@ class _ManageEventsState extends State<ManageEvents> {
                         EventDetails(data: userCreatedEvents[index]))),
             title: Text(
               userCreatedEvents[index].data["name"],
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
             subtitle: Text(
               "${userCreatedEvents[index].data["participants"].length} Participants",
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
             trailing: IconButton(
               onPressed: () async {
@@ -73,7 +73,7 @@ class _ManageEventsState extends State<ManageEvents> {
                             )));
                 refresh();
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.edit,
                 color: kLightGreen,
                 size: 30,

@@ -140,11 +140,11 @@ class _EditEventPageState extends State<EditEventPage>
           padding: const EdgeInsets.all(12.0),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            SizedBox(
+            const SizedBox(
               height: 50,
             ),
-            CustomHeadText(text: "Edit Event"),
-            SizedBox(
+            const CustomHeadText(text: "Edit Event"),
+            const SizedBox(
               height: 25,
             ),
             GestureDetector(
@@ -171,7 +171,7 @@ class _EditEventPageState extends State<EditEventPage>
                             fit: BoxFit.fill,
                           ))),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -179,7 +179,7 @@ class _EditEventPageState extends State<EditEventPage>
                 icon: Icons.event_outlined,
                 label: "Event Name",
                 hint: "Add Event Name"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -188,7 +188,7 @@ class _EditEventPageState extends State<EditEventPage>
                 icon: Icons.description_outlined,
                 label: "Description",
                 hint: "Add Description"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -196,7 +196,7 @@ class _EditEventPageState extends State<EditEventPage>
                 icon: Icons.location_on_outlined,
                 label: "Location",
                 hint: "Enter Location of Event"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -207,7 +207,7 @@ class _EditEventPageState extends State<EditEventPage>
               readOnly: true,
               onTap: () => _selectDateTime(context),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -215,7 +215,7 @@ class _EditEventPageState extends State<EditEventPage>
                 icon: Icons.people_outlined,
                 label: "Guests",
                 hint: "Enter list of guests"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -223,19 +223,19 @@ class _EditEventPageState extends State<EditEventPage>
                 icon: Icons.attach_money_outlined,
                 label: "Sponsers",
                 hint: "Enter Sponsers"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             Row(
               children: [
-                Text(
+                const Text(
                   "In Person Event",
                   style: TextStyle(
                       color: kLightGreen,
                       fontSize: 20,
                       fontWeight: FontWeight.w600),
                 ),
-                Spacer(),
+                const Spacer(),
                 Switch(
                     activeColor: kLightGreen,
                     focusColor: Colors.green,
@@ -247,7 +247,7 @@ class _EditEventPageState extends State<EditEventPage>
                     }),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             SizedBox(
@@ -260,7 +260,7 @@ class _EditEventPageState extends State<EditEventPage>
                       _descController.text == "" ||
                       _locationController.text == "" ||
                       _dateTimeController.text == "") {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text(
                             "Event Name,Description,Location,Date & time are must.")));
                   } else {
@@ -278,7 +278,7 @@ class _EditEventPageState extends State<EditEventPage>
                               widget.docID)
                           .then((value) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Event Updated !!")));
+                            const SnackBar(content: Text("Event Updated !!")));
                         Navigator.pop(context);
                       });
                     } else {
@@ -296,13 +296,13 @@ class _EditEventPageState extends State<EditEventPage>
                               widget.docID))
                           .then((value) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Event Updated !!")));
+                            const SnackBar(content: Text("Event Updated !!")));
                         Navigator.pop(context);
                       });
                     }
                   }
                 },
-                child: Text(
+                child: const Text(
                   "Update Event",
                   style: TextStyle(
                       color: Colors.black,
@@ -311,33 +311,33 @@ class _EditEventPageState extends State<EditEventPage>
                 ),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 12,
             ),
-            Text(
+            const Text(
               "Danger Zone",
               style: TextStyle(
                   color: Color.fromARGB(255, 243, 138, 136),
                   fontWeight: FontWeight.w600,
                   fontSize: 20),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             SizedBox(
               height: 50,
               width: double.infinity,
               child: MaterialButton(
-                color: Color.fromARGB(255, 243, 138, 136),
+                color: const Color.fromARGB(255, 243, 138, 136),
                 onPressed: () {
                   showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                            title: Text(
+                            title: const Text(
                               "Are you Sure ?",
                               style: TextStyle(color: Colors.white),
                             ),
-                            content: Text(
+                            content: const Text(
                               "Your event will be deleted",
                               style: TextStyle(color: Colors.white),
                             ),
@@ -350,23 +350,23 @@ class _EditEventPageState extends State<EditEventPage>
                                           bucketId: "64bcdd3ad336eaa231f0",
                                           fileId: widget.image);
                                       ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(
+                                          .showSnackBar(const SnackBar(
                                               content: Text(
                                                   "Event Deleted Successfully. ")));
                                       Navigator.pop(context);
                                       Navigator.pop(context);
                                     });
                                   },
-                                  child: Text("Yes")),
+                                  child: const Text("Yes")),
                               TextButton(
                                   onPressed: () {
                                     Navigator.pop(context);
                                   },
-                                  child: Text("No")),
+                                  child: const Text("No")),
                             ],
                           ));
                 },
-                child: Text(
+                child: const Text(
                   "Delete Event",
                   style: TextStyle(
                       color: Colors.black,

@@ -24,17 +24,17 @@ class _SignUpPageState extends State<SignUpPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
+            const SizedBox(
               height: 80,
             ),
-            Text(
+            const Text(
               "Sign Up",
               style: TextStyle(
                   color: kLightGreen,
                   fontSize: 32,
                   fontWeight: FontWeight.w800),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -42,7 +42,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 icon: Icons.person_outline,
                 label: "Name",
                 hint: "Enter your Name"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -50,7 +50,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 icon: Icons.email_outlined,
                 label: "Email",
                 hint: "Enter your Email"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -59,7 +59,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 icon: Icons.lock_outline_rounded,
                 label: "Password",
                 hint: "Enter your Password"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             SizedBox(
@@ -72,32 +72,32 @@ class _SignUpPageState extends State<SignUpPage> {
                       .then((value) {
                     if (value == "success") {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Account Created")));
+                          const SnackBar(content: Text("Account Created")));
                       Future.delayed(
-                          Duration(seconds: 2),
+                          const Duration(seconds: 2),
                           () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => LoginPage())));
+                                  builder: (context) => const LoginPage())));
                     } else {
                       ScaffoldMessenger.of(context)
                           .showSnackBar(SnackBar(content: Text(value)));
                     }
                   });
                 },
-                child: Text("Sign Up"),
                 style: OutlinedButton.styleFrom(
                     foregroundColor: kLightGreen,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8))),
+                child: Text("Sign Up"),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(

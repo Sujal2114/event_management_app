@@ -15,7 +15,7 @@ class _CustomHeadTextState extends State<CustomHeadText> {
   Widget build(BuildContext context) {
     return Text(
       widget.text,
-      style: TextStyle(
+      style: const TextStyle(
           color: kLightGreen, fontSize: 32, fontWeight: FontWeight.w600),
     );
   }

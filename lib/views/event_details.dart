@@ -36,7 +36,7 @@ class _EventDetailsState extends State<EventDetails> {
       body: Column(
         children: [
           Stack(children: [
-            Container(
+            SizedBox(
               height: 300,
               width: double.infinity,
               child: ColorFiltered(
@@ -52,7 +52,7 @@ class _EventDetailsState extends State<EventDetails> {
               top: 25,
               child: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.arrow_back,
                     size: 28,
                     color: Colors.white,
@@ -63,33 +63,33 @@ class _EventDetailsState extends State<EventDetails> {
               left: 8,
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.calendar_month_outlined,
                     size: 18,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 4,
                   ),
                   Text(
                     "${formatDate(widget.data.data["datetime"])}",
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w400),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 14,
                   ),
-                  Icon(
+                  const Icon(
                     Icons.access_time_outlined,
                     size: 18,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 4,
                   ),
                   Text(
                     "${formatTime(widget.data.data["datetime"])}",
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w400),
@@ -102,16 +102,16 @@ class _EventDetailsState extends State<EventDetails> {
               left: 8,
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.location_on_outlined,
                     size: 18,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 4,
                   ),
                   Text(
                     "${widget.data.data["location"]}",
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w400),
@@ -130,98 +130,98 @@ class _EventDetailsState extends State<EventDetails> {
                     Expanded(
                       child: Text(
                         widget.data.data["name"],
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.w700),
                       ),
                     ),
-                    Icon(Icons.share)
+                    const Icon(Icons.share)
                   ],
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 Text(
                   widget.data.data["description"],
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 Text(
                   "${widget.data.data["participants"].length} people are attending.",
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: kLightGreen,
                       fontWeight: FontWeight.w500,
                       fontSize: 16),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
-                Text(
+                const Text(
                   "Special Guests ",
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       fontSize: 20),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 Text(
                   "${widget.data.data["guests"] == "" ? "None" : widget.data.data["guests"]}",
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
-                Text(
+                const Text(
                   "Sponsers ",
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       fontSize: 20),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 Text(
                   "${widget.data.data["sponsers"] == "" ? "None" : widget.data.data["sponsers"]}",
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
-                Text(
+                const Text(
                   "More Info ",
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       fontSize: 20),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 Text(
                   "Event Type : ${widget.data.data["isInPerson"] == true ? "In Person" : "Virtual"}",
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 Text(
                   "Time : ${formatTime(widget.data.data["datetime"])}",
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 Text(
                   "Location : ${widget.data.data["location"]}",
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 ElevatedButton.icon(
@@ -231,7 +231,7 @@ class _EventDetailsState extends State<EventDetails> {
                     },
                     icon: const Icon(Icons.map),
                     label: const Text("Open in Google Maps")),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 isRSVPedEvent
@@ -241,11 +241,11 @@ class _EventDetailsState extends State<EventDetails> {
                         child: MaterialButton(
                           color: kLightGreen,
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                                 content:
                                     Text("You are attending this event.")));
                           },
-                          child: Text(
+                          child: const Text(
                             "Attending Event",
                             style: TextStyle(
                                 color: Colors.black,
@@ -268,17 +268,17 @@ class _EventDetailsState extends State<EventDetails> {
                                   isRSVPedEvent = true;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
+                                    const SnackBar(
                                         content: Text("RSVP Successful !!!")));
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
+                                    const SnackBar(
                                         content: Text(
                                             "Something went worng. Try Agian.")));
                               }
                             });
                           },
-                          child: Text(
+                          child: const Text(
                             "RSVP Event",
                             style: TextStyle(
                                 color: Colors.black,

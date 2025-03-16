@@ -17,10 +17,10 @@ class _CheckSessionsState extends State<CheckSessions> {
     checkSessions().then((value) {
       if (value) {
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => Homepage()));
+            context, MaterialPageRoute(builder: (context) => const Homepage()));
       } else {
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => LoginPage()));
+            context, MaterialPageRoute(builder: (context) => const LoginPage()));
       }
     });
     super.initState();
@@ -28,7 +28,7 @@ class _CheckSessionsState extends State<CheckSessions> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(child: CircularProgressIndicator()),
     );
   }

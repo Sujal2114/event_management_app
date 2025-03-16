@@ -30,7 +30,7 @@ class _ProfileState extends State<Profile> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
+          const SizedBox(
             height: 50,
           ),
           Padding(
@@ -40,14 +40,14 @@ class _ProfileState extends State<Profile> {
               children: [
                 Text(
                   name,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: kLightGreen,
                       fontWeight: FontWeight.w800,
                       fontSize: 24),
                 ),
                 Text(
                   email,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: kLightGreen,
                       fontWeight: FontWeight.w500,
                       fontSize: 18),
@@ -65,8 +65,8 @@ class _ProfileState extends State<Profile> {
                 children: [
                   ListTile(
                     onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => RSVPEvents())),
-                    title: Text(
+                        MaterialPageRoute(builder: (context) => const RSVPEvents())),
+                    title: const Text(
                       "RSVP Events",
                       style: TextStyle(color: kLightGreen),
                     ),
@@ -76,8 +76,8 @@ class _ProfileState extends State<Profile> {
                     onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ManageEvents())),
-                    title: Text(
+                            builder: (context) => const ManageEvents())),
+                    title: const Text(
                       "Manage Events",
                       style: TextStyle(color: kLightGreen),
                     ),
@@ -88,9 +88,9 @@ class _ProfileState extends State<Profile> {
                     onTap: () {
                       logoutUser();
                       Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => LoginPage()));
+                          MaterialPageRoute(builder: (context) => const LoginPage()));
                     },
-                    title: Text(
+                    title: const Text(
                       "Logout",
                       style: TextStyle(color: kLightGreen),
                     ),

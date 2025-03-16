@@ -66,11 +66,11 @@ class _HomepageState extends State<Homepage> {
                 onPressed: () async {
                   // logoutUser();
                   await Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => Profile()));
+                      MaterialPageRoute(builder: (context) => const Profile()));
 
                   refresh();
                 },
-                icon: Icon(
+                icon: const Icon(
                   Icons.account_circle,
                   color: kLightGreen,
                   size: 30,
@@ -86,13 +86,13 @@ class _HomepageState extends State<Homepage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Hi ${userName} 👋",
-                      style: TextStyle(
+                      "Hi $userName 👋",
+                      style: const TextStyle(
                           color: kLightGreen,
                           fontSize: 32,
                           fontWeight: FontWeight.w600),
                     ),
-                    Text("Expore event around you",
+                    const Text("Expore event around you",
                         style: TextStyle(
                             color: kLightGreen,
                             fontSize: 16,
@@ -117,7 +117,7 @@ class _HomepageState extends State<Homepage> {
                     //         ],
                     //       ),
                     const SizedBox(height: 16),
-                    Text(
+                    const Text(
                       "Popular Events ",
                       style: TextStyle(
                         color: kLightGreen,
@@ -176,14 +176,14 @@ class _HomepageState extends State<Homepage> {
             FloatingActionButton(
           onPressed: () async {
             await Navigator.push(context,
-                MaterialPageRoute(builder: (context) => CreateEventPage()));
+                MaterialPageRoute(builder: (context) => const CreateEventPage()));
             refresh();
           },
+          backgroundColor: kLightGreen,
           child: Icon(
             Icons.add,
             color: Colors.black,
           ),
-          backgroundColor: kLightGreen,
         )
         // :null,
         );

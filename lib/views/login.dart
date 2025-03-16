@@ -24,17 +24,17 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
+            const SizedBox(
               height: 80,
             ),
-            Text(
+            const Text(
               "Login",
               style: TextStyle(
                   color: kLightGreen,
                   fontSize: 32,
                   fontWeight: FontWeight.w800),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -42,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
                 icon: Icons.email_outlined,
                 label: "Email",
                 hint: "Enter your Email"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             CustomInputForm(
@@ -51,10 +51,10 @@ class _LoginPageState extends State<LoginPage> {
                 icon: Icons.lock_outline_rounded,
                 label: "Password",
                 hint: "Enter your Password"),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             SizedBox(
@@ -78,34 +78,34 @@ class _LoginPageState extends State<LoginPage> {
                       .then((value) {
                     if (value) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Login Successful !!!")));
+                          const SnackBar(content: Text("Login Successful !!!")));
 
                       Future.delayed(
-                          Duration(seconds: 2),
+                          const Duration(seconds: 2),
                           () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => Homepage())));
+                                  builder: (context) => const Homepage())));
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Login Failed Try Again.")));
+                          const SnackBar(content: Text("Login Failed Try Again.")));
                     }
                   });
                 },
-                child: Text("Login"),
                 style: OutlinedButton.styleFrom(
                     foregroundColor: kLightGreen,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8))),
+                child: Text("Login"),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             GestureDetector(
               onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => SignUpPage())),
-              child: Row(
+                  MaterialPageRoute(builder: (context) => const SignUpPage())),
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(

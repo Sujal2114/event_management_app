@@ -30,7 +30,7 @@ Future loginUser(String email, String password) async {
     SavedData.saveUserId(user.userId);
     getUserData();
     return true;
-  } on AppwriteException catch (e) {
+  } on AppwriteException {
     return false;
   }
 }
