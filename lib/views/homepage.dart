@@ -1,5 +1,5 @@
-import 'package:appwrite/models.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:event_management_app/auth.dart';
 import 'package:event_management_app/constants/colors.dart';
@@ -25,7 +25,7 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   String userName = "User";
-  List<Document> events = [];
+  List<Map<String, dynamic>> events = [];
   bool isLoading = true;
 
   @override
@@ -175,8 +175,10 @@ class _HomepageState extends State<Homepage> {
             // SavedData.getUserIsOrganized() ==true?
             FloatingActionButton(
           onPressed: () async {
-            await Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const CreateEventPage()));
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const CreateEventPage()));
             refresh();
           },
           backgroundColor: kLightGreen,

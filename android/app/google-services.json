@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "667209165373",
+    "project_id": "mpl-lab-67b9c",
+    "storage_bucket": "mpl-lab-67b9c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:667209165373:android:24936b030b185d9086d854",
+        "android_client_info": {
+          "package_name": "com.example.event_management_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZrRJ1DmwqUkn-xn71DKms85gVwjF9yDc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

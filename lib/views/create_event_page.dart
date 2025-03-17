@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:appwrite/appwrite.dart';
 import 'package:event_management_app/constants/colors.dart';
 import 'package:event_management_app/containers/custom_headtext.dart';
 import 'package:event_management_app/containers/custom_input_form.dart';
@@ -10,8 +9,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker_web/image_picker_web.dart';
-
-import '../auth.dart';
 
 class CreateEventPage extends StatefulWidget {
   const CreateEventPage({super.key});
@@ -34,7 +31,6 @@ class _CreateEventPageState extends State<CreateEventPage>
   final TextEditingController _guestController = TextEditingController();
   final TextEditingController _sponsersController = TextEditingController();
 
-  Storage storage = Storage(client);
   bool isUploading = false;
   String userId = "";
   @override
@@ -85,18 +81,17 @@ class _CreateEventPageState extends State<CreateEventPage>
     });
   }
 
-// upload event image to storage bucket
+// upload event image to storage
 
   Future uploadEventImage() async {
     setState(() {
       isUploading = true;
     });
-    try {
-      if (_filePickerResult != null && _filePickerResult!.files.isNotEmpty) {
-        PlatformFile file = _filePickerResult!.files.first;
-        final fileByes = await File(file.path!).readAsBytes();
-        final inputFile =
-            InputFile.fromBytes(bytes: fileByes, filename: file.name);
+    // TODO: Implement Firebase Storage upload
+    setState(() {
+      isUploading = false;
+    });
+    return "";
 
         final response = await storage.createFile(
             bucketId: '64bcdd3ad336eaa231f0',

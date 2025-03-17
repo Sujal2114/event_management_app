@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:appwrite/appwrite.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:event_management_app/constants/colors.dart';
 import 'package:event_management_app/containers/custom_headtext.dart';
 import 'package:event_management_app/containers/custom_input_form.dart';
@@ -103,28 +104,32 @@ class _EditEventPageState extends State<EditEventPage>
 
 // upload event image to storage bucket
 
-  Future uploadEventImage() async {
+  Future<String?> uploadEventImage() async {
     setState(() {
       isUploading = true;
     });
     try {
       if (_filePickerResult != null) {
         PlatformFile file = _filePickerResult!.files.first;
-        final fileByes = await File(file.path!).readAsBytes();
-        final inputFile =
-            InputFile.fromBytes(bytes: fileByes, filename: file.name);
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('event_images')
+            .child(fileName);
 
-        final response = await storage.createFile(
-            bucketId: '64bcdd3ad336eaa231f0',
-            fileId: ID.unique(),
-            file: inputFile);
-        print(response.$id);
-        return response.$id;
+        final uploadTask = ref.putFile(File(file.path!));
+        final snapshot = await uploadTask.whenComplete(() {});
+        final downloadUrl = await snapshot.ref.getDownloadURL();
+
+        return downloadUrl;
       } else {
-        print("Something went wrong");
+        print("No file selected");
+        return null;
       }
     } catch (e) {
-      print(e);
+      print('Error uploading image: $e');
+      return null;
     } finally {
       setState(() {
         isUploading = false;
@@ -167,7 +172,7 @@ class _EditEventPageState extends State<EditEventPage>
                       : ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            "https://cloud.appwrite.io/v1/storage/buckets/64bcdd3ad336eaa231f0/files/${widget.image}/view?project=64b4fc61e5f4aa023618",
+                            widget.image,
                             fit: BoxFit.fill,
                           ))),
             ),

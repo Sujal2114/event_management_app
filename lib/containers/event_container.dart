@@ -1,18 +1,20 @@
-import 'package:appwrite/models.dart';
 import 'package:event_management_app/containers/format_datetime.dart';
 import 'package:event_management_app/views/event_details.dart';
 
 import 'package:flutter/material.dart';
 
 class EventContainer extends StatelessWidget {
-  final Document data;
+  final Map<String, dynamic> data;
   const EventContainer({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (context) => EventDetails(data: data))),
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EventDetails(data: data)),
+          ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Stack(
@@ -39,10 +41,7 @@ class EventContainer extends StatelessWidget {
                     Colors.black.withOpacity(0.35),
                     BlendMode.darken,
                   ),
-                  child: Image.network(
-                    "https://cloud.appwrite.io/v1/storage/buckets/64bcdd3ad336eaa231f0/files/${data.data["image"]}/view?project=64b4fc61e5f4aa023618",
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.network(data["image"], fit: BoxFit.cover),
                 ),
               ),
             ),
@@ -93,22 +92,23 @@ class EventContainer extends StatelessWidget {
               ),
             ),
             Positioned(
-                bottom: 20,
-                left: 16,
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                      data.data["location"],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
+              bottom: 20,
+              left: 16,
+              child: Row(
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    data.data["location"],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                     ),
-                  ],
-                ))
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

@@ -1,4 +1,3 @@
-import 'package:appwrite/models.dart';
 import 'package:event_management_app/views/event_details.dart';
 
 import 'package:flutter/material.dart';
@@ -8,7 +7,7 @@ import '../containers/format_datetime.dart';
 class PopularItem extends StatelessWidget {
   final int index;
 
-  final Document eventData;
+  final Map<String, dynamic> eventData;
   const PopularItem({super.key, required this.index, required this.eventData});
 
   @override
@@ -28,7 +27,7 @@ class PopularItem extends StatelessWidget {
         style: const TextStyle(color: Colors.white, fontSize: 18),
       ),
       title: Text(
-        eventData.data["name"],
+        eventData["name"],
         style: const TextStyle(fontSize: 18, color: Colors.white),
       ),
       subtitle: Column(
@@ -40,7 +39,7 @@ class PopularItem extends StatelessWidget {
                   size: 18, color: Colors.white),
               const SizedBox(width: 4),
               Text(
-                formatDate(eventData.data["datetime"]),
+                formatDate(eventData["datetime"]),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,

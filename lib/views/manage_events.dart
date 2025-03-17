@@ -1,4 +1,4 @@
-import 'package:appwrite/models.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:event_management_app/constants/colors.dart';
 import 'package:event_management_app/database.dart';
 import 'package:event_management_app/views/edit_event_page.dart';
@@ -13,7 +13,7 @@ class ManageEvents extends StatefulWidget {
 }
 
 class _ManageEventsState extends State<ManageEvents> {
-  List<Document> userCreatedEvents = [];
+  List<Map<String, dynamic>> userCreatedEvents = [];
   bool isLoading = true;
 
   @override

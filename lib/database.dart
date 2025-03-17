@@ -1,58 +1,35 @@
-import 'package:appwrite/appwrite.dart';
 import 'package:event_management_app/saved_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
-import 'auth.dart';
-
-String databaseId = "64b62c6d12ac915e805f";
-
-final Databases databases = Databases(client);
-
-// Save the user data to appwrite database
+// Save the user data to database
 Future<void> saveUserData(String name, String email, String userId) async {
-  return await databases
-      .createDocument(
-          databaseId: databaseId,
-          collectionId: "64b62c75bf3910dd4925",
-          documentId: ID.unique(),
-          data: {
-            "name": name,
-            "email": email,
-            "userId": userId,
-          })
-      .then((value) => print("Document Created"))
-      .catchError((e) => print(e));
+  try {
+    await FirebaseFirestore.instance.collection('users').doc(userId).set({
+      'name': name,
+      'email': email,
+      'updatedAt': DateTime.now(),
+    }, SetOptions(merge: true));
+  } catch (e) {
+    print('Error updating user data: $e');
+    throw e;
+  }
 }
 
 // get user data from the database
-
-Future getUserData() async {
-  final id = SavedData.getUserId();
-  print(id);
+Future<Map<String, dynamic>?> getUserData() async {
+  final userId = SavedData.getUserId();
   try {
-    final data = await databases.listDocuments(
-        databaseId: databaseId,
-        collectionId: "64b62c75bf3910dd4925",
-        queries: [
-          Query.equal("userId", id),
-        ]);
-
-    SavedData.saveUserName(data.documents[0].data['name']);
-    SavedData.saveUserEmail(data.documents[0].data['email']);
-    // this is for organizer update please uncomment if required.
-    print(data.documents[0].data['isOrganizer']);
-    print(data.documents[0].data['isOrganizer'].runtimeType);
-    // add this one 
-    SavedData.saveUserIsOrganized(data.documents[0].data['isOrganizer']??false); 
-
-    print("data is data : $data");
+    final docSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    return docSnapshot.data();
   } catch (e) {
-    print("error on database : $e");
-    print(e);
+    print('Error getting user data: $e');
+    return null;
   }
 }
 
 // Create new events
-
 Future<void> createEvent(
     String name,
     String desc,
@@ -63,72 +40,92 @@ Future<void> createEvent(
     bool isInPersonOrNot,
     String guest,
     String sponsers) async {
-  return await databases
-      .createDocument(
-          databaseId: databaseId,
-          collectionId: "64bb726399a1320b557f",
-          documentId: ID.unique(),
-          data: {
-            "name": name,
-            "description": desc,
-            "image": image,
-            "location": location,
-            "datetime": datetime,
-            "createdBy": createdBy,
-            "isInPerson": isInPersonOrNot,
-            "guests": guest,
-            "sponsers": sponsers
-          })
-      .then((value) => print("Event Created"))
-      .catchError((e) => print(e));
+  try {
+    // Upload image to Firebase Storage if provided
+    String imageUrl = '';
+    if (image.isNotEmpty) {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('event_images')
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await storageRef.putString(image, format: PutStringFormat.dataUrl);
+      imageUrl = await storageRef.getDownloadURL();
+    }
+
+    // Create event document in Firestore
+    await FirebaseFirestore.instance.collection('events').add({
+      'name': name,
+      'description': desc,
+      'image': imageUrl,
+      'location': location,
+      'datetime': datetime,
+      'createdBy': createdBy,
+      'isInPerson': isInPersonOrNot,
+      'guest': guest,
+      'sponsers': sponsers,
+      'participants': [],
+      'createdAt': DateTime.now(),
+    });
+  } catch (e) {
+    print('Error creating event: $e');
+    throw e;
+  }
 }
 
 // Read all Events
-Future getAllEvents() async {
+Future<List<Map<String, dynamic>>> getAllEvents() async {
   try {
-    final data = await databases.listDocuments(
-        databaseId: databaseId, collectionId: "64bb726399a1320b557f");
-    return data.documents;
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('events')
+        .orderBy('datetime', descending: true)
+        .get();
+
+    return querySnapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data()})
+        .toList();
   } catch (e) {
-    print(e);
+    print('Error getting events: $e');
+    return [];
   }
 }
 
 // rsvp an event
-
-Future rsvpEvent(List participants, String documentId) async {
-  final userId = SavedData.getUserId();
-  participants.add(userId);
+Future<bool> rsvpEvent(List participants, String documentId) async {
   try {
-    await databases.updateDocument(
-        databaseId: databaseId,
-        collectionId: "64bb726399a1320b557f",
-        documentId: documentId,
-        data: {"participants": participants});
+    final userId = SavedData.getUserId();
+    participants.add(userId);
+
+    await FirebaseFirestore.instance
+        .collection('events')
+        .doc(documentId)
+        .update({'participants': participants});
     return true;
   } catch (e) {
-    print(e);
+    print('Error updating RSVP: $e');
     return false;
   }
 }
 
 // list all event created by the user
-
-Future manageEvents() async {
+Future<List<Map<String, dynamic>>> manageEvents() async {
   final userId = SavedData.getUserId();
   try {
-    final data = await databases.listDocuments(
-        databaseId: databaseId,
-        collectionId: "64bb726399a1320b557f",
-        queries: [Query.equal("createdBy", userId)]);
-    return data.documents;
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('events')
+        .where('createdBy', isEqualTo: userId)
+        .orderBy('datetime', descending: true)
+        .get();
+
+    return querySnapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data()})
+        .toList();
   } catch (e) {
-    print(e);
+    print('Error getting managed events: $e');
+    return [];
   }
 }
 
 // update the edited event
-
 Future<void> updateEvent(
     String name,
     String desc,
@@ -140,73 +137,100 @@ Future<void> updateEvent(
     String guest,
     String sponsers,
     String docID) async {
-  return await databases
-      .updateDocument(
-          databaseId: databaseId,
-          collectionId: "64bb726399a1320b557f",
-          documentId: docID,
-          data: {
-            "name": name,
-            "description": desc,
-            "image": image,
-            "location": location,
-            "datetime": datetime,
-            "createdBy": createdBy,
-            "isInPerson": isInPersonOrNot,
-            "guests": guest,
-            "sponsers": sponsers
-          })
-      .then((value) => print("Event Updated"))
-      .catchError((e) => print(e));
+  try {
+    String imageUrl = '';
+    if (image.isNotEmpty && image.startsWith('data:')) {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('event_images')
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await storageRef.putString(image, format: PutStringFormat.dataUrl);
+      imageUrl = await storageRef.getDownloadURL();
+    } else {
+      imageUrl = image; // Keep existing image URL if not changed
+    }
+
+    await FirebaseFirestore.instance.collection('events').doc(docID).update({
+      'name': name,
+      'description': desc,
+      'image': imageUrl,
+      'location': location,
+      'datetime': datetime,
+      'createdBy': createdBy,
+      'isInPerson': isInPersonOrNot,
+      'guest': guest,
+      'sponsers': sponsers,
+      'updatedAt': DateTime.now(),
+    });
+  } catch (e) {
+    print('Error updating event: $e');
+    throw e;
+  }
 }
 
 // deleting an event
-
-Future deleteEvent(String docID) async {
+Future<void> deleteEvent(String docID) async {
   try {
-    final response = await databases.deleteDocument(
-        databaseId: databaseId,
-        collectionId: "64bb726399a1320b557f",
-        documentId: docID);
+    // Get the event document to check for image
+    final eventDoc =
+        await FirebaseFirestore.instance.collection('events').doc(docID).get();
 
-    print(response);
+    if (eventDoc.exists) {
+      final data = eventDoc.data();
+      final imageUrl = data?['image'] as String?;
+
+      // Delete the image from storage if it exists
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        try {
+          final ref = FirebaseStorage.instance.refFromURL(imageUrl);
+          await ref.delete();
+        } catch (e) {
+          print('Error deleting image: $e');
+        }
+      }
+
+      // Delete the event document
+      await FirebaseFirestore.instance.collection('events').doc(docID).delete();
+    }
   } catch (e) {
-    print(e);
+    print('Error deleting event: $e');
+    throw e;
   }
 }
 
-Future getUpcomingEvents() async {
+// Get upcoming events
+Future<List<Map<String, dynamic>>> getUpcomingEvents() async {
   try {
     final now = DateTime.now();
-    final response = await databases.listDocuments(
-      databaseId: databaseId,
-      collectionId: "64bb726399a1320b557f",
-      queries: [
-        Query.greaterThan("datetime", now),
-      ],
-    );
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('events')
+        .where('datetime', isGreaterThan: now.toIso8601String())
+        .orderBy('datetime', ascending: true)
+        .get();
 
-    return response.documents;
+    return querySnapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data()})
+        .toList();
   } catch (e) {
-    print(e);
-    return []; // Handle errors appropriately in your application
+    print('Error getting upcoming events: $e');
+    return [];
   }
 }
 
-Future getPastEvents() async {
+Future<List<Map<String, dynamic>>> getPastEvents() async {
   try {
     final now = DateTime.now();
-    final response = await databases.listDocuments(
-      databaseId: databaseId,
-      collectionId: "64bb726399a1320b557f",
-      queries: [
-        Query.lessThan("datetime", now),
-      ],
-    );
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('events')
+        .where('datetime', isLessThan: now.toIso8601String())
+        .orderBy('datetime', descending: true)
+        .get();
 
-    return response.documents;
+    return querySnapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data()})
+        .toList();
   } catch (e) {
-    print(e);
+    print('Error getting past events: $e');
     return [];
   }
 }

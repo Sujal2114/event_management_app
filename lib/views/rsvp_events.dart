@@ -1,4 +1,4 @@
-import 'package:appwrite/models.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:event_management_app/constants/colors.dart';
 import 'package:event_management_app/database.dart';
 import 'package:event_management_app/saved_data.dart';
@@ -14,7 +14,7 @@ class RSVPEvents extends StatefulWidget {
 
 class _RSVPEventsState extends State<RSVPEvents> {
   List<Document> events = [];
-  List<Document> userEvents = [];
+  List<Map<String, dynamic>> userEvents = [];
   bool isLoading = true;
 
   @override
