@@ -25,7 +25,7 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   String userName = "User";
-  List<Map<String, dynamic>> events = [];
+  List<QueryDocumentSnapshot> events = [];
   bool isLoading = true;
 
   @override
@@ -38,7 +38,7 @@ class _HomepageState extends State<Homepage> {
 
   void refresh() {
     getAllEvents().then((value) {
-      events = value;
+      events = value.docs;
       isLoading = false;
       setState(() {});
     });

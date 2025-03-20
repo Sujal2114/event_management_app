@@ -1,4 +1,3 @@
-import 'package:event_management_app/saved_data.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -21,8 +20,7 @@ Future<String> createUser(String name, String email, String password) async {
       'createdAt': DateTime.now(),
     });
 
-    // Save user data locally
-    await SavedData.saveUserData(name, email, credential.user!.uid);
+    // User data is already saved in Firebase
     return "success";
   } on FirebaseAuthException catch (e) {
     if (e.code == 'weak-password') {
@@ -50,15 +48,7 @@ Future<bool> loginUser(String email, String password) async {
         .doc(credential.user!.uid)
         .get();
 
-    if (userDoc.exists) {
-      await SavedData.saveUserData(
-        userDoc.data()!['name'],
-        email,
-        credential.user!.uid,
-      );
-      return true;
-    }
-    return false;
+    return userDoc.exists;
   } catch (e) {
     return false;
   }
@@ -67,7 +57,6 @@ Future<bool> loginUser(String email, String password) async {
 // Logout the user
 Future<void> logoutUser() async {
   await FirebaseAuth.instance.signOut();
-  await SavedData.clearSavedData();
 }
 
 // check if user have an active session or not
@@ -79,14 +68,7 @@ Future<bool> checkSessions() async {
         .doc(currentUser.uid)
         .get();
 
-    if (userDoc.exists) {
-      await SavedData.saveUserData(
-        userDoc.data()!['name'],
-        currentUser.email!,
-        currentUser.uid,
-      );
-      return true;
-    }
+    return userDoc.exists;
   }
   return false;
 }

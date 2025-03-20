@@ -44,11 +44,11 @@ class _ManageEventsState extends State<ManageEvents> {
                     builder: (context) =>
                         EventDetails(data: userCreatedEvents[index]))),
             title: Text(
-              userCreatedEvents[index].data["name"],
+              userCreatedEvents[index]["name"],
               style: const TextStyle(color: Colors.white),
             ),
             subtitle: Text(
-              "${userCreatedEvents[index].data["participants"].length} Participants",
+              "${userCreatedEvents[index]["participants"].length} Participants",
               style: const TextStyle(color: Colors.white),
             ),
             trailing: IconButton(
@@ -57,19 +57,16 @@ class _ManageEventsState extends State<ManageEvents> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => EditEventPage(
-                              image: userCreatedEvents[index].data["image"],
-                              name: userCreatedEvents[index].data["name"],
-                              desc:
-                                  userCreatedEvents[index].data["description"],
-                              loc: userCreatedEvents[index].data["location"],
-                              datetime:
-                                  userCreatedEvents[index].data["datetime"],
-                              guests: userCreatedEvents[index].data["guests"],
-                              sponsers:
-                                  userCreatedEvents[index].data["sponsers"],
-                              isInPerson:
-                                  userCreatedEvents[index].data["isInPerson"],
-                              docID: userCreatedEvents[index].$id,
+                              image: userCreatedEvents[index]["image"],
+                              name: userCreatedEvents[index]["name"],
+                              desc: userCreatedEvents[index]["description"],
+                              loc: userCreatedEvents[index]["location"],
+                              datetime: userCreatedEvents[index]["datetime"],
+                              guests: userCreatedEvents[index]["guests"],
+                              sponsers: userCreatedEvents[index]["sponsers"],
+                              isInPerson: userCreatedEvents[index]
+                                  ["isInPerson"],
+                              docID: userCreatedEvents[index]["id"],
                             )));
                 refresh();
               },

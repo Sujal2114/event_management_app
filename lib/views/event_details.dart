@@ -69,7 +69,7 @@ class _EventDetailsState extends State<EventDetails> {
                     const Icon(Icons.calendar_month_outlined, size: 18),
                     const SizedBox(width: 4),
                     Text(
-                      "${formatDate(widget.data.data["datetime"])}",
+                      "${formatDate(widget.data["datetime"])}",
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -80,7 +80,7 @@ class _EventDetailsState extends State<EventDetails> {
                     const Icon(Icons.access_time_outlined, size: 18),
                     const SizedBox(width: 4),
                     Text(
-                      "${formatTime(widget.data.data["datetime"])}",
+                      "${formatTime(widget.data["datetime"])}",
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -98,7 +98,7 @@ class _EventDetailsState extends State<EventDetails> {
                     const Icon(Icons.location_on_outlined, size: 18),
                     const SizedBox(width: 4),
                     Text(
-                      "${widget.data.data["location"]}",
+                      "${widget.data["location"]}",
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -119,7 +119,7 @@ class _EventDetailsState extends State<EventDetails> {
                   children: [
                     Expanded(
                       child: Text(
-                        widget.data.data["name"],
+                        widget.data["name"],
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -132,12 +132,12 @@ class _EventDetailsState extends State<EventDetails> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  widget.data.data["description"],
+                  widget.data["description"],
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "${widget.data.data["participants"].length} people are attending.",
+                  "${widget.data["participants"].length} people are attending.",
                   style: const TextStyle(
                     color: kLightGreen,
                     fontWeight: FontWeight.w500,
@@ -155,7 +155,7 @@ class _EventDetailsState extends State<EventDetails> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "${widget.data.data["guests"] == "" ? "None" : widget.data.data["guests"]}",
+                  "${widget.data["guests"] == "" ? "None" : widget.data["guests"]}",
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
@@ -169,7 +169,7 @@ class _EventDetailsState extends State<EventDetails> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "${widget.data.data["sponsers"] == "" ? "None" : widget.data.data["sponsers"]}",
+                  "${widget.data["sponsers"] == "" ? "None" : widget.data["sponsers"]}",
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
@@ -183,24 +183,24 @@ class _EventDetailsState extends State<EventDetails> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Event Type : ${widget.data.data["isInPerson"] == true ? "In Person" : "Virtual"}",
+                  "Event Type : ${widget.data["isInPerson"] == true ? "In Person" : "Virtual"}",
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Time : ${formatTime(widget.data.data["datetime"])}",
+                  "Time : ${formatTime(widget.data["datetime"])}",
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Location : ${widget.data.data["location"]}",
+                  "Location : ${widget.data["location"]}",
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: () {
                     _launchUrl(
-                      "https://www.google.com/maps/search/?api=1&query=${widget.data.data["location"]}",
+                      "https://www.google.com/maps/search/?api=1&query=${widget.data["location"]}",
                     );
                   },
                   icon: const Icon(Icons.map),
@@ -237,8 +237,8 @@ class _EventDetailsState extends State<EventDetails> {
                           color: kLightGreen,
                           onPressed: () {
                             rsvpEvent(
-                              widget.data.data["participants"],
-                              widget.data.$id,
+                              widget.data["participants"],
+                              widget.data["id"],
                             ).then((value) {
                               if (value) {
                                 setState(() {

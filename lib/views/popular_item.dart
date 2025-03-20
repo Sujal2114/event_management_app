@@ -51,7 +51,7 @@ class PopularItem extends StatelessWidget {
                   size: 18, color: Colors.white),
               const SizedBox(width: 4),
               Text(
-                formatTime(eventData.data["datetime"]),
+                formatTime(eventData["datetime"]),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -67,7 +67,7 @@ class PopularItem extends StatelessWidget {
                   size: 18, color: Colors.white),
               const SizedBox(width: 4),
               Text(
-                eventData.data["location"],
+                eventData["location"],
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,

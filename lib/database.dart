@@ -73,19 +73,17 @@ Future<void> createEvent(
 }
 
 // Read all Events
-Future<List<Map<String, dynamic>>> getAllEvents() async {
+Future<QuerySnapshot<Map<String, dynamic>>> getAllEvents() async {
   try {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('events')
         .orderBy('datetime', descending: true)
         .get();
 
-    return querySnapshot.docs
-        .map((doc) => {'id': doc.id, ...doc.data()})
-        .toList();
+    return querySnapshot;
   } catch (e) {
     print('Error getting events: $e');
-    return [];
+    throw Exception('Error getting events: $e');
   }
 }
 
@@ -205,7 +203,7 @@ Future<List<Map<String, dynamic>>> getUpcomingEvents() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('events')
         .where('datetime', isGreaterThan: now.toIso8601String())
-        .orderBy('datetime', ascending: true)
+        .orderBy('datetime', descending: false)
         .get();
 
     return querySnapshot.docs

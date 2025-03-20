@@ -13,7 +13,7 @@ class RSVPEvents extends StatefulWidget {
 }
 
 class _RSVPEventsState extends State<RSVPEvents> {
-  List<Document> events = [];
+  List<QueryDocumentSnapshot> events = [];
   List<Map<String, dynamic>> userEvents = [];
   bool isLoading = true;
 
@@ -26,12 +26,12 @@ class _RSVPEventsState extends State<RSVPEvents> {
   void refresh() {
     String userId = SavedData.getUserId();
     getAllEvents().then((value) {
-      events = value;
+      events = value.docs;
       for (var event in events) {
-        List<dynamic> participants = event.data["participants"];
+        List<dynamic> participants = (event.data() as Map<String, dynamic>)?['participants'] ?? [];
 
         if (participants.contains(userId)) {
-          userEvents.add(event);
+          userEvents.add(event.data() as Map<String, dynamic>);
         }
         setState(() {
           isLoading = false;
@@ -54,11 +54,11 @@ class _RSVPEventsState extends State<RSVPEvents> {
                     builder: (context) =>
                         EventDetails(data: userEvents[index]))),
             title: Text(
-              userEvents[index].data["name"],
+              userEvents[index]["name"],
               style: const TextStyle(color: Colors.white),
             ),
             subtitle: Text(
-              userEvents[index].data["location"],
+              userEvents[index]["location"],
               style: const TextStyle(color: Colors.white),
             ),
             trailing: const Icon(

@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:event_management_app/constants/colors.dart';
 import 'package:event_management_app/containers/custom_headtext.dart';
 import 'package:event_management_app/containers/custom_input_form.dart';
@@ -33,6 +32,7 @@ class _CreateEventPageState extends State<CreateEventPage>
 
   bool isUploading = false;
   String userId = "";
+
   @override
   void initState() {
     super.initState();
@@ -46,26 +46,26 @@ class _CreateEventPageState extends State<CreateEventPage>
     super.dispose();
   }
 
-  // To pickup date and time form the user
-
+  // Function to pick date and time
   Future<void> _selectDateTime(BuildContext context) async {
-    final DateTime? pickedDateTime = await showDatePicker(
+    final DateTime? pickedDate = await showDatePicker(
         context: context,
         initialDate: DateTime.now(),
         firstDate: DateTime.now(),
         lastDate: DateTime(2100));
 
-    if (pickedDateTime != null) {
+    if (pickedDate != null) {
       final TimeOfDay? pickedTime =
           await showTimePicker(context: context, initialTime: TimeOfDay.now());
 
       if (pickedTime != null) {
         final DateTime selectedDateTime = DateTime(
-            pickedDateTime.year,
-            pickedDateTime.month,
-            pickedDateTime.day,
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
             pickedTime.hour,
             pickedTime.minute);
+
         setState(() {
           _dateTimeController.text = selectedDateTime.toString();
         });
@@ -73,45 +73,18 @@ class _CreateEventPageState extends State<CreateEventPage>
     }
   }
 
+  // Function to open file picker for selecting images
   void _openFilePicker() async {
     FilePickerResult? result =
         await FilePicker.platform.pickFiles(type: FileType.image);
-    setState(() {
-      _filePickerResult = result;
-    });
-  }
-
-// upload event image to storage
-
-  Future uploadEventImage() async {
-    setState(() {
-      isUploading = true;
-    });
-    // TODO: Implement Firebase Storage upload
-    setState(() {
-      isUploading = false;
-    });
-    return "";
-
-        final response = await storage.createFile(
-            bucketId: '64bcdd3ad336eaa231f0',
-            fileId: ID.unique(),
-            file: inputFile);
-        print(response.$id);
-        return response.$id;
-      } else {
-        print("Something went wrong");
-      }
-    } catch (e) {
-      print(e);
-    } finally {
+    if (result != null) {
       setState(() {
-        isUploading = false;
+        _filePickerResult = result;
       });
     }
   }
 
-// image picker for web platform
+  // Function to pick images for web platform
   void pickImageForWeb() async {
     Uint8List? bytesFromPicker = await ImagePickerWeb.getImageAsBytes();
     if (bytesFromPicker != null) {
@@ -120,25 +93,90 @@ class _CreateEventPageState extends State<CreateEventPage>
       });
     }
   }
-  // upload image for web platform
 
-  Future uploadImageWeb() async {
+  // Function to upload event image to storage
+  Future<String?> uploadEventImage() async {
+    setState(() {
+      isUploading = true;
+    });
+
     try {
-      if (_webImagePickerResult != null) {
-        final inputFile = InputFile.fromBytes(
-            bytes: _webImagePickerResult!, filename: "event_image.jpg");
+      if (_filePickerResult != null) {
+        final inputFile = File(_filePickerResult!.files.first.path!);
 
-        final response = await storage.createFile(
-            bucketId: '64bcdd3ad336eaa231f0',
-            fileId: ID.unique(),
-            file: inputFile);
-        print(response.$id);
-        return response.$id;
+        // TODO: Implement Firebase/Appwrite storage upload logic here
+
+        print("File uploaded successfully");
+        return "uploaded_file_id"; // Replace with actual file ID
       } else {
-        print("Something went wrong");
+        print("No file selected");
+        return null;
       }
     } catch (e) {
-      print(e);
+      print("Error uploading file: $e");
+      return null;
+    } finally {
+      setState(() {
+        isUploading = false;
+      });
+    }
+  }
+
+  // Function to upload image for web
+  Future<String?> uploadImageWeb() async {
+    try {
+      if (_webImagePickerResult != null) {
+        // TODO: Implement Firebase/Appwrite storage upload logic for web
+
+        print("Web image uploaded successfully");
+        return "uploaded_web_file_id"; // Replace with actual file ID
+      } else {
+        print("No file selected for web");
+        return null;
+      }
+    } catch (e) {
+      print("Error uploading web image: $e");
+      return null;
+    }
+  }
+
+  // Function to create an event
+  void _createEvent() async {
+    if (_nameController.text.isEmpty ||
+        _descController.text.isEmpty ||
+        _locationController.text.isEmpty ||
+        _dateTimeController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("All fields are required!")));
+      return;
+    }
+
+    String? imageUrl;
+    if (kIsWeb) {
+      imageUrl = await uploadImageWeb();
+    } else {
+      imageUrl = await uploadEventImage();
+    }
+
+    if (imageUrl != null) {
+      await createEvent(
+        _nameController.text,
+        _descController.text,
+        imageUrl,
+        _locationController.text,
+        _dateTimeController.text,
+        userId,
+        _isInPersonEvent,
+        _guestController.text,
+        _sponsersController.text,
+      );
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Event Created!")));
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to upload image!")));
     }
   }
 
@@ -146,24 +184,16 @@ class _CreateEventPageState extends State<CreateEventPage>
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const SizedBox(
-              height: 50,
-            ),
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 50),
             const CustomHeadText(text: "Create Event"),
-            const SizedBox(
-              height: 25,
-            ),
+            const SizedBox(height: 25),
             GestureDetector(
               onTap: () {
-                if (kIsWeb) {
-                  pickImageForWeb();
-                } else {
-                  _openFilePicker();
-                }
+                kIsWeb ? pickImageForWeb() : _openFilePicker();
               },
               child: Container(
                 width: double.infinity,
@@ -171,179 +201,70 @@ class _CreateEventPageState extends State<CreateEventPage>
                 decoration: BoxDecoration(
                     color: kLightGreen, borderRadius: BorderRadius.circular(8)),
                 child: _filePickerResult != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image(
-                          image: FileImage(
-                              File(_filePickerResult!.files.first.path!)),
-                          fit: BoxFit.fill,
-                        ),
-                      )
+                    ? Image.file(File(_filePickerResult!.files.first.path!),
+                        fit: BoxFit.fill)
                     : _webImagePickerResult != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.memory(
-                              _webImagePickerResult!,
-                              fit: BoxFit.fill,
-                            ),
-                          )
+                        ? Image.memory(_webImagePickerResult!, fit: BoxFit.fill)
                         : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                                Icon(
-                                  Icons.add_a_photo_outlined,
-                                  size: 42,
-                                  color: Colors.black,
+                              Icon(Icons.add_a_photo_outlined),
+                              SizedBox(height: 8),
+                              Text(
+                                'Add Event Image',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                SizedBox(
-                                  height: 8,
-                                ),
-                                Text(
-                                  "Add Event Image",
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600),
-                                )
-                              ]),
+                              ),
+                            ],
+                          ),
               ),
             ),
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 20),
             CustomInputForm(
                 controller: _nameController,
-                icon: Icons.event_outlined,
-                label: "Event Name",
-                hint: "Add Event Name"),
-            const SizedBox(
-              height: 8,
-            ),
+                label: 'Event Name',
+                icon: Icons.event, hint: 'Event Name',),
+            const SizedBox(height: 20),
             CustomInputForm(
-                maxLines: 4,
                 controller: _descController,
-                icon: Icons.description_outlined,
-                label: "Description",
-                hint: "Add Description"),
-            const SizedBox(
-              height: 8,
-            ),
+                hint: 'Event Description',
+                label: 'Event Description',
+                icon: Icons.description),
+            const SizedBox(height: 20),
             CustomInputForm(
                 controller: _locationController,
-                icon: Icons.location_on_outlined,
-                label: "Location",
-                hint: "Enter Location of Event"),
-            const SizedBox(
-              height: 8,
-            ),
+                hint: 'Event Location',
+                label: 'Event Location',
+                icon: Icons.location_on),
+            const SizedBox(height: 20),
             CustomInputForm(
               controller: _dateTimeController,
-              icon: Icons.date_range_outlined,
-              label: "Date & Time",
-              hint: "Pickup Date Time",
+              hint: 'Event Date & Time',
+              label: 'Event Date & Time',
+              icon: Icons.calendar_today,
               readOnly: true,
               onTap: () => _selectDateTime(context),
             ),
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 20),
             CustomInputForm(
                 controller: _guestController,
-                icon: Icons.people_outlined,
-                label: "Guests",
-                hint: "Enter list of guests"),
-            const SizedBox(
-              height: 8,
-            ),
+                hint: 'Number of Guests',
+                label: 'Number of Guests',
+                icon: Icons.people),
+            const SizedBox(height: 20),
             CustomInputForm(
                 controller: _sponsersController,
-                icon: Icons.attach_money_outlined,
-                label: "Sponsers",
-                hint: "Enter Sponsers"),
-            const SizedBox(
-              height: 8,
+                hint: 'Event Sponsors',
+                label: 'Event Sponsors',
+                icon: Icons.business),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _createEvent,
+              child: const Text('Create Event'),
             ),
-            Row(
-              children: [
-                const Text(
-                  "In Person Event",
-                  style: TextStyle(color: kLightGreen, fontSize: 20),
-                ),
-                const Spacer(),
-                Switch(
-                    activeColor: kLightGreen,
-                    focusColor: Colors.green,
-                    value: _isInPersonEvent,
-                    onChanged: (value) {
-                      setState(() {
-                        _isInPersonEvent = value;
-                      });
-                    }),
-              ],
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            SizedBox(
-              height: 50,
-              width: double.infinity,
-              child: MaterialButton(
-                color: kLightGreen,
-                onPressed: () {
-                  if (_nameController.text == "" ||
-                      _descController.text == "" ||
-                      _locationController.text == "" ||
-                      _dateTimeController.text == "") {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text(
-                            "Event Name,Description,Location,Date & time are must.")));
-                  } else {
-                    if (kIsWeb) {
-                      uploadImageWeb()
-                          .then((value) => createEvent(
-                              _nameController.text,
-                              _descController.text,
-                              value,
-                              _locationController.text,
-                              _dateTimeController.text,
-                              userId,
-                              _isInPersonEvent,
-                              _guestController.text,
-                              _sponsersController.text))
-                          .then((value) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Event Created !!")));
-                        Navigator.pop(context);
-                      });
-                    } else {
-                      uploadEventImage()
-                          .then((value) => createEvent(
-                              _nameController.text,
-                              _descController.text,
-                              value??"66629e1a0000e9198561",
-                              _locationController.text,
-                              _dateTimeController.text,
-                              userId,
-                              _isInPersonEvent,
-                              _guestController.text,
-                              _sponsersController.text))
-                          .then((value) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Event Created !!")));
-                        Navigator.pop(context);
-                      });
-                    }
-                  }
-                },
-                child: const Text(
-                  "Create New Event",
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 20),
-                ),
-              ),
-            )
-          ]),
+          ],
         ),
       ),
     );

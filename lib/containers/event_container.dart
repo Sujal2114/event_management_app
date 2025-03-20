@@ -10,11 +10,10 @@ class EventContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap:
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => EventDetails(data: data)),
-          ),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => EventDetails(data: data)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Stack(
@@ -51,7 +50,7 @@ class EventContainer extends StatelessWidget {
               child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.9,
                 child: Text(
-                  data.data["name"],
+                  data["name"],
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     overflow: TextOverflow.ellipsis,
@@ -70,7 +69,7 @@ class EventContainer extends StatelessWidget {
                   const Icon(Icons.calendar_month_outlined, size: 18),
                   const SizedBox(width: 4),
                   Text(
-                    formatDate(data.data["datetime"]),
+                    formatDate(data["datetime"]),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -81,7 +80,7 @@ class EventContainer extends StatelessWidget {
                   const Icon(Icons.access_time_rounded, size: 18),
                   const SizedBox(width: 4),
                   Text(
-                    formatTime(data.data["datetime"]),
+                    formatTime(data["datetime"]),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -99,7 +98,7 @@ class EventContainer extends StatelessWidget {
                   const Icon(Icons.location_on_outlined, size: 18),
                   const SizedBox(width: 4),
                   Text(
-                    data.data["location"],
+                    data["location"],
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,

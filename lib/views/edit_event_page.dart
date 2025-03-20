@@ -45,7 +45,7 @@ class _EditEventPageState extends State<EditEventPage>
   final TextEditingController _guestController = TextEditingController();
   final TextEditingController _sponsersController = TextEditingController();
 
-  Storage storage = Storage(client);
+  final FirebaseStorage storage = FirebaseStorage.instance;
   bool isUploading = false;
   String userId = "";
   @override
@@ -291,7 +291,7 @@ class _EditEventPageState extends State<EditEventPage>
                           .then((value) => updateEvent(
                               _nameController.text,
                               _descController.text,
-                              value,
+                              value ?? widget.image,
                               _locationController.text,
                               _dateTimeController.text,
                               userId,
@@ -351,9 +351,11 @@ class _EditEventPageState extends State<EditEventPage>
                                   onPressed: () {
                                     deleteEvent(widget.docID)
                                         .then((value) async {
-                                      await storage.deleteFile(
-                                          bucketId: "64bcdd3ad336eaa231f0",
-                                          fileId: widget.image);
+                                      final ref = FirebaseStorage.instance
+                                          .ref()
+                                          .child('event_images')
+                                          .child(widget.image);
+                                      await ref.delete();
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(const SnackBar(
                                               content: Text(
