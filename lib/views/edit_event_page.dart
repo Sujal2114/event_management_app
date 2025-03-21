@@ -1,390 +1,300 @@
 import 'dart:io';
-
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:event_management_app/constants/colors.dart';
-import 'package:event_management_app/containers/custom_headtext.dart';
-import 'package:event_management_app/containers/custom_input_form.dart';
-import 'package:event_management_app/database.dart';
-import 'package:event_management_app/saved_data.dart';
-import 'package:file_picker/file_picker.dart';
-
-import 'package:flutter/material.dart';
-
-import '../auth.dart';
+import 'package:image_picker/image_picker.dart';
+import '../constants/colors.dart';
+import '../containers/custom_headtext.dart';
+import '../containers/custom_input_form.dart';
 
 class EditEventPage extends StatefulWidget {
-  final String image, name, desc, loc, datetime, guests, sponsers, docID;
-  final bool isInPerson;
-  const EditEventPage(
-      {super.key,
-      required this.image,
-      required this.name,
-      required this.desc,
-      required this.loc,
-      required this.datetime,
-      required this.guests,
-      required this.sponsers,
-      required this.docID,
-      required this.isInPerson});
+  final String eventId;
+  final Map<String, dynamic> eventData;
+
+  const EditEventPage({
+    Key? key,
+    required this.eventId,
+    required this.eventData,
+  }) : super(key: key);
 
   @override
   State<EditEventPage> createState() => _EditEventPageState();
 }
 
-class _EditEventPageState extends State<EditEventPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _EditEventPageState extends State<EditEventPage> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _eventNameController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _locationController;
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+  File? _imageFile;
+  String? _currentImageUrl;
+  bool _isLoading = false;
 
-  FilePickerResult? _filePickerResult;
-  bool _isInPersonEvent = true;
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _dateTimeController = TextEditingController();
-  final TextEditingController _guestController = TextEditingController();
-  final TextEditingController _sponsersController = TextEditingController();
-
-  final FirebaseStorage storage = FirebaseStorage.instance;
-  bool isUploading = false;
-  String userId = "";
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this);
-    userId = SavedData.getUserId();
-    _nameController.text = widget.name;
-    _descController.text = widget.desc;
-    _locationController.text = widget.loc;
-    _dateTimeController.text = widget.datetime;
-    _guestController.text = widget.guests;
-    _sponsersController.text = widget.sponsers;
-    _isInPersonEvent = widget.isInPerson;
+    _eventNameController =
+        TextEditingController(text: widget.eventData['name']);
+    _descriptionController =
+        TextEditingController(text: widget.eventData['description']);
+    _locationController =
+        TextEditingController(text: widget.eventData['location']);
+    _currentImageUrl = widget.eventData['imageUrl'];
+
+    final DateTime eventDateTime = widget.eventData['dateTime'].toDate();
+    _selectedDate = eventDateTime;
+    _selectedTime = TimeOfDay.fromDateTime(eventDateTime);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _eventNameController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
-  // To pickup date and time form the user
-
-  Future<void> _selectDateTime(BuildContext context) async {
-    final DateTime? pickedDateTime = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime.now(),
-        lastDate: DateTime(2100));
-
-    if (pickedDateTime != null) {
-      final TimeOfDay? pickedTime =
-          await showTimePicker(context: context, initialTime: TimeOfDay.now());
-
-      if (pickedTime != null) {
-        final DateTime selectedDateTime = DateTime(
-            pickedDateTime.year,
-            pickedDateTime.month,
-            pickedDateTime.day,
-            pickedTime.hour,
-            pickedTime.minute);
-        setState(() {
-          _dateTimeController.text = selectedDateTime.toString();
-        });
-      }
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 
-  void _openFilePicker() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-    setState(() {
-      _filePickerResult = result;
-    });
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
   }
 
-// upload event image to storage bucket
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+      });
+    }
+  }
 
-  Future<String?> uploadEventImage() async {
+  Future<void> _updateEvent() async {
+    if (!_formKey.currentState!.validate() ||
+        _selectedDate == null ||
+        _selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
     setState(() {
-      isUploading = true;
+      _isLoading = true;
     });
+
     try {
-      if (_filePickerResult != null) {
-        PlatformFile file = _filePickerResult!.files.first;
-        final fileName =
-            '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-        final ref = FirebaseStorage.instance
+      String imageUrl = _currentImageUrl!;
+
+      // Upload new image if selected
+      if (_imageFile != null) {
+        final storageRef = FirebaseStorage.instance
             .ref()
             .child('event_images')
-            .child(fileName);
+            .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await storageRef.putFile(_imageFile!);
+        imageUrl = await storageRef.getDownloadURL();
+      }
 
-        final uploadTask = ref.putFile(File(file.path!));
-        final snapshot = await uploadTask.whenComplete(() {});
-        final downloadUrl = await snapshot.ref.getDownloadURL();
+      // Create event datetime
+      final eventDateTime = DateTime(
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
+      );
 
-        return downloadUrl;
-      } else {
-        print("No file selected");
-        return null;
+      // Update event document in Firestore
+      await FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.eventId)
+          .update({
+        'name': _eventNameController.text,
+        'description': _descriptionController.text,
+        'location': _locationController.text,
+        'dateTime': eventDateTime,
+        'imageUrl': imageUrl,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event updated successfully')),
+        );
       }
     } catch (e) {
-      print('Error uploading image: $e');
-      return null;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating event: $e')),
+        );
+      }
     } finally {
-      setState(() {
-        isUploading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const SizedBox(
-              height: 50,
-            ),
-            const CustomHeadText(text: "Edit Event"),
-            const SizedBox(
-              height: 25,
-            ),
-            GestureDetector(
-              onTap: () => _openFilePicker(),
-              child: Container(
-                  width: double.infinity,
-                  height: MediaQuery.of(context).size.height * .3,
-                  decoration: BoxDecoration(
-                      color: kLightGreen,
-                      borderRadius: BorderRadius.circular(8)),
-                  child: _filePickerResult != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image(
-                            image: FileImage(
-                                File(_filePickerResult!.files.first.path!)),
-                            fit: BoxFit.fill,
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            widget.image,
-                            fit: BoxFit.fill,
-                          ))),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            CustomInputForm(
-                controller: _nameController,
-                icon: Icons.event_outlined,
-                label: "Event Name",
-                hint: "Add Event Name"),
-            const SizedBox(
-              height: 8,
-            ),
-            CustomInputForm(
-                maxLines: 4,
-                controller: _descController,
-                icon: Icons.description_outlined,
-                label: "Description",
-                hint: "Add Description"),
-            const SizedBox(
-              height: 8,
-            ),
-            CustomInputForm(
-                controller: _locationController,
-                icon: Icons.location_on_outlined,
-                label: "Location",
-                hint: "Enter Location of Event"),
-            const SizedBox(
-              height: 8,
-            ),
-            CustomInputForm(
-              controller: _dateTimeController,
-              icon: Icons.date_range_outlined,
-              label: "Date & Time",
-              hint: "Pickup Date Time",
-              readOnly: true,
-              onTap: () => _selectDateTime(context),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            CustomInputForm(
-                controller: _guestController,
-                icon: Icons.people_outlined,
-                label: "Guests",
-                hint: "Enter list of guests"),
-            const SizedBox(
-              height: 8,
-            ),
-            CustomInputForm(
-                controller: _sponsersController,
-                icon: Icons.attach_money_outlined,
-                label: "Sponsers",
-                hint: "Enter Sponsers"),
-            const SizedBox(
-              height: 8,
-            ),
-            Row(
-              children: [
-                const Text(
-                  "In Person Event",
-                  style: TextStyle(
-                      color: kLightGreen,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600),
-                ),
-                const Spacer(),
-                Switch(
-                    activeColor: kLightGreen,
-                    focusColor: Colors.green,
-                    value: _isInPersonEvent,
-                    onChanged: (value) {
-                      setState(() {
-                        _isInPersonEvent = value;
-                      });
-                    }),
-              ],
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            SizedBox(
-              height: 50,
-              width: double.infinity,
-              child: MaterialButton(
-                color: kLightGreen,
-                onPressed: () {
-                  if (_nameController.text == "" ||
-                      _descController.text == "" ||
-                      _locationController.text == "" ||
-                      _dateTimeController.text == "") {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text(
-                            "Event Name,Description,Location,Date & time are must.")));
-                  } else {
-                    if (_filePickerResult == null) {
-                      updateEvent(
-                              _nameController.text,
-                              _descController.text,
-                              widget.image,
-                              _locationController.text,
-                              _dateTimeController.text,
-                              userId,
-                              _isInPersonEvent,
-                              _guestController.text,
-                              _sponsersController.text,
-                              widget.docID)
-                          .then((value) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Event Updated !!")));
-                        Navigator.pop(context);
-                      });
-                    } else {
-                      uploadEventImage()
-                          .then((value) => updateEvent(
-                              _nameController.text,
-                              _descController.text,
-                              value ?? widget.image,
-                              _locationController.text,
-                              _dateTimeController.text,
-                              userId,
-                              _isInPersonEvent,
-                              _guestController.text,
-                              _sponsersController.text,
-                              widget.docID))
-                          .then((value) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Event Updated !!")));
-                        Navigator.pop(context);
-                      });
-                    }
-                  }
-                },
-                child: const Text(
-                  "Update Event",
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 20),
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            const Text(
-              "Danger Zone",
-              style: TextStyle(
-                  color: Color.fromARGB(255, 243, 138, 136),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            SizedBox(
-              height: 50,
-              width: double.infinity,
-              child: MaterialButton(
-                color: const Color.fromARGB(255, 243, 138, 136),
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                            title: const Text(
-                              "Are you Sure ?",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            content: const Text(
-                              "Your event will be deleted",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    deleteEvent(widget.docID)
-                                        .then((value) async {
-                                      final ref = FirebaseStorage.instance
-                                          .ref()
-                                          .child('event_images')
-                                          .child(widget.image);
-                                      await ref.delete();
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
-                                              content: Text(
-                                                  "Event Deleted Successfully. ")));
-                                      Navigator.pop(context);
-                                      Navigator.pop(context);
-                                    });
-                                  },
-                                  child: const Text("Yes")),
-                              TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text("No")),
-                            ],
-                          ));
-                },
-                child: const Text(
-                  "Delete Event",
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 20),
-                ),
-              ),
-            ),
-          ]),
-        ),
+      appBar: AppBar(
+        title: const Text('Edit Event'),
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const CustomHeadText(text: 'Event Details'),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _eventNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Event Name',
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter event name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _descriptionController,
+                        decoration: InputDecoration(
+                          labelText: 'Description',
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                        ),
+                        maxLines: 3,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter event description';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _locationController,
+                        decoration: InputDecoration(
+                          labelText: 'Location',
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter event location';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Date'),
+                              subtitle: Text(
+                                _selectedDate == null
+                                    ? 'Select Date'
+                                    : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                              ),
+                              onTap: () => _selectDate(context),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Time'),
+                              subtitle: Text(
+                                _selectedTime == null
+                                    ? 'Select Time'
+                                    : _selectedTime!.format(context),
+                              ),
+                              onTap: () => _selectTime(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_imageFile != null)
+                        Image.file(
+                          _imageFile!,
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )
+                      else if (_currentImageUrl != null)
+                        Image.network(
+                          _currentImageUrl!,
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _pickImage,
+                        child: const Text('Change Image'),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          onPressed: _updateEvent,
+                          child: const Text(
+                            'Update Event',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }

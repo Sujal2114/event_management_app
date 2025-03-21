@@ -1,272 +1,248 @@
 import 'dart:io';
-import 'package:event_management_app/constants/colors.dart';
-import 'package:event_management_app/containers/custom_headtext.dart';
-import 'package:event_management_app/containers/custom_input_form.dart';
-import 'package:event_management_app/database.dart';
-import 'package:event_management_app/saved_data.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker_web/image_picker_web.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import '../constants/colors.dart';
+import '../containers/custom_headtext.dart';
+import '../containers/custom_input_form.dart';
 
 class CreateEventPage extends StatefulWidget {
-  const CreateEventPage({super.key});
+  const CreateEventPage({Key? key}) : super(key: key);
 
   @override
   State<CreateEventPage> createState() => _CreateEventPageState();
 }
 
-class _CreateEventPageState extends State<CreateEventPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _CreateEventPageState extends State<CreateEventPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _eventNameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _locationController = TextEditingController();
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+  File? _imageFile;
+  bool _isLoading = false;
 
-  FilePickerResult? _filePickerResult;
-  Uint8List? _webImagePickerResult;
-  bool _isInPersonEvent = true;
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _dateTimeController = TextEditingController();
-  final TextEditingController _guestController = TextEditingController();
-  final TextEditingController _sponsersController = TextEditingController();
-
-  bool isUploading = false;
-  String userId = "";
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this);
-    userId = SavedData.getUserId();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  // Function to pick date and time
-  Future<void> _selectDateTime(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime.now(),
-        lastDate: DateTime(2100));
-
-    if (pickedDate != null) {
-      final TimeOfDay? pickedTime =
-          await showTimePicker(context: context, initialTime: TimeOfDay.now());
-
-      if (pickedTime != null) {
-        final DateTime selectedDateTime = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute);
-
-        setState(() {
-          _dateTimeController.text = selectedDateTime.toString();
-        });
-      }
-    }
-  }
-
-  // Function to open file picker for selecting images
-  void _openFilePicker() async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null) {
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null) {
       setState(() {
-        _filePickerResult = result;
+        _selectedDate = picked;
       });
     }
   }
 
-  // Function to pick images for web platform
-  void pickImageForWeb() async {
-    Uint8List? bytesFromPicker = await ImagePickerWeb.getImageAsBytes();
-    if (bytesFromPicker != null) {
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
       setState(() {
-        _webImagePickerResult = bytesFromPicker;
+        _selectedTime = picked;
       });
     }
   }
 
-  // Function to upload event image to storage
-  Future<String?> uploadEventImage() async {
-    setState(() {
-      isUploading = true;
-    });
-
-    try {
-      if (_filePickerResult != null) {
-        final inputFile = File(_filePickerResult!.files.first.path!);
-
-        // TODO: Implement Firebase/Appwrite storage upload logic here
-
-        print("File uploaded successfully");
-        return "uploaded_file_id"; // Replace with actual file ID
-      } else {
-        print("No file selected");
-        return null;
-      }
-    } catch (e) {
-      print("Error uploading file: $e");
-      return null;
-    } finally {
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
       setState(() {
-        isUploading = false;
+        _imageFile = File(image.path);
       });
     }
   }
 
-  // Function to upload image for web
-  Future<String?> uploadImageWeb() async {
-    try {
-      if (_webImagePickerResult != null) {
-        // TODO: Implement Firebase/Appwrite storage upload logic for web
-
-        print("Web image uploaded successfully");
-        return "uploaded_web_file_id"; // Replace with actual file ID
-      } else {
-        print("No file selected for web");
-        return null;
-      }
-    } catch (e) {
-      print("Error uploading web image: $e");
-      return null;
-    }
-  }
-
-  // Function to create an event
-  void _createEvent() async {
-    if (_nameController.text.isEmpty ||
-        _descController.text.isEmpty ||
-        _locationController.text.isEmpty ||
-        _dateTimeController.text.isEmpty) {
+  Future<void> _createEvent() async {
+    if (!_formKey.currentState!.validate() ||
+        _selectedDate == null ||
+        _selectedTime == null ||
+        _imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("All fields are required!")));
+        const SnackBar(
+            content: Text('Please fill all fields and select an image')),
+      );
       return;
     }
 
-    String? imageUrl;
-    if (kIsWeb) {
-      imageUrl = await uploadImageWeb();
-    } else {
-      imageUrl = await uploadEventImage();
-    }
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (imageUrl != null) {
-      await createEvent(
-        _nameController.text,
-        _descController.text,
-        imageUrl,
-        _locationController.text,
-        _dateTimeController.text,
-        userId,
-        _isInPersonEvent,
-        _guestController.text,
-        _sponsersController.text,
+    try {
+      // Upload image to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('event_images')
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await storageRef.putFile(_imageFile!);
+      final imageUrl = await storageRef.getDownloadURL();
+
+      // Create event document in Firestore
+      final eventDateTime = DateTime(
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
       );
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Event Created!")));
-      Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to upload image!")));
+      await FirebaseFirestore.instance.collection('events').add({
+        'name': _eventNameController.text,
+        'description': _descriptionController.text,
+        'location': _locationController.text,
+        'dateTime': Timestamp.fromDate(eventDateTime),
+        'imageUrl': imageUrl,
+        'createdAt': Timestamp.now(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event created successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating event: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Event'),
+        backgroundColor:
+            Colors.blue, // Using Flutter's built-in Colors instead of AppColors
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 50),
-            const CustomHeadText(text: "Create Event"),
-            const SizedBox(height: 25),
-            GestureDetector(
-              onTap: () {
-                kIsWeb ? pickImageForWeb() : _openFilePicker();
-              },
-              child: Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height * .3,
-                decoration: BoxDecoration(
-                    color: kLightGreen, borderRadius: BorderRadius.circular(8)),
-                child: _filePickerResult != null
-                    ? Image.file(File(_filePickerResult!.files.first.path!),
-                        fit: BoxFit.fill)
-                    : _webImagePickerResult != null
-                        ? Image.memory(_webImagePickerResult!, fit: BoxFit.fill)
-                        : const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_a_photo_outlined),
-                              SizedBox(height: 8),
-                              Text(
-                                'Add Event Image',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const CustomHeadText(text: 'Create a New Event'),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _eventNameController,
+                decoration: InputDecoration(
+                  labelText: 'Event Name',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter event name';
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 20),
-            CustomInputForm(
-                controller: _nameController,
-                label: 'Event Name',
-                icon: Icons.event, hint: 'Event Name',),
-            const SizedBox(height: 20),
-            CustomInputForm(
-                controller: _descController,
-                hint: 'Event Description',
-                label: 'Event Description',
-                icon: Icons.description),
-            const SizedBox(height: 20),
-            CustomInputForm(
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter event description';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
                 controller: _locationController,
-                hint: 'Event Location',
-                label: 'Event Location',
-                icon: Icons.location_on),
-            const SizedBox(height: 20),
-            CustomInputForm(
-              controller: _dateTimeController,
-              hint: 'Event Date & Time',
-              label: 'Event Date & Time',
-              icon: Icons.calendar_today,
-              readOnly: true,
-              onTap: () => _selectDateTime(context),
-            ),
-            const SizedBox(height: 20),
-            CustomInputForm(
-                controller: _guestController,
-                hint: 'Number of Guests',
-                label: 'Number of Guests',
-                icon: Icons.people),
-            const SizedBox(height: 20),
-            CustomInputForm(
-                controller: _sponsersController,
-                hint: 'Event Sponsors',
-                label: 'Event Sponsors',
-                icon: Icons.business),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _createEvent,
-              child: const Text('Create Event'),
-            ),
-          ],
+                decoration: InputDecoration(
+                  labelText: 'Location',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter event location';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                title: Text(_selectedDate == null
+                    ? 'Select Date'
+                    : 'Date: ${_selectedDate!.toLocal().toString().split(' ')[0]}'),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () => _selectDate(context),
+              ),
+              ListTile(
+                title: Text(_selectedTime == null
+                    ? 'Select Time'
+                    : 'Time: ${_selectedTime!.format(context)}'),
+                trailing: const Icon(Icons.access_time),
+                onTap: () => _selectTime(context),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _pickImage,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                ),
+                child:
+                    Text(_imageFile == null ? 'Select Image' : 'Change Image'),
+              ),
+              if (_imageFile != null) ...[
+                const SizedBox(height: 8),
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.file(_imageFile!, fit: BoxFit.cover),
+                ),
+              ],
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _createEvent,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Create Event'),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _eventNameController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    super.dispose();
   }
 }

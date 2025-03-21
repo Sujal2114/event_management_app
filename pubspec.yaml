@@ -38,7 +38,7 @@ dependencies:
   google_fonts: ^5.1.0
   shared_preferences: ^2.2.0
   file_picker: ^6.1.1
-  intl: ^0.18.1
+  intl: ^0.20.2
   url_launcher: ^6.1.14
   image_picker_web: ^3.1.1
   carousel_slider: ^5.0.0
@@ -48,6 +48,7 @@ dependencies:
   firebase_auth: ^4.15.3
   cloud_firestore: ^4.13.6
   firebase_storage: ^11.5.6
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

@@ -1,286 +1,192 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:event_management_app/constants/colors.dart';
-import 'package:event_management_app/containers/format_datetime.dart';
-import 'package:event_management_app/database.dart';
-import 'package:event_management_app/saved_data.dart';
-
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:event_management_app/containers/format_datetime.dart';
 
 class EventDetails extends StatefulWidget {
-  final Map<String, dynamic> data;
-  const EventDetails({super.key, required this.data});
+  final String eventId;
+  final Map<String, dynamic> eventData;
+
+  const EventDetails({
+    Key? key,
+    required this.eventId,
+    required this.eventData,
+  }) : super(key: key);
 
   @override
   State<EventDetails> createState() => _EventDetailsState();
 }
 
 class _EventDetailsState extends State<EventDetails> {
-  bool isRSVPedEvent = false;
-  String id = "";
-  List<dynamic> participants = [];
-
-  bool isUserPresent(List<dynamic> participants, String userId) {
-    return participants.contains(userId);
-  }
+  bool _isRsvped = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
-    id = SavedData.getUserId();
-    participants = widget.data["participants"] ?? [];
-    isRSVPedEvent = isUserPresent(participants, id);
     super.initState();
+    _checkRsvpStatus();
+  }
+
+  Future<void> _checkRsvpStatus() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.eventId)
+          .collection('rsvps')
+          .doc(user.uid)
+          .get();
+
+      setState(() {
+        _isRsvped = doc.exists;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleRsvp() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to RSVP')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final rsvpRef = FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.eventId)
+          .collection('rsvps')
+          .doc(user.uid);
+
+      if (_isRsvped) {
+        await rsvpRef.delete();
+      } else {
+        await rsvpRef.set({
+          'timestamp': FieldValue.serverTimestamp(),
+          'userId': user.uid,
+          'userEmail': user.email,
+        });
+      }
+
+      setState(() {
+        _isRsvped = !_isRsvped;
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isRsvped ? 'RSVP successful!' : 'RSVP cancelled'),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update RSVP status')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Stack(
+      appBar: AppBar(
+        title: const Text('Event Details'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 300,
-                width: double.infinity,
-                child: ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.3),
-                    BlendMode.darken,
+              Text(
+                widget.eventData['eventName'] ?? '',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today),
+                          const SizedBox(width: 8),
+                          Text(
+                            formatDateTime(
+                              widget.eventData['eventDate']?.toDate() ??
+                                  DateTime.now(),
+                            ),
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              widget.eventData['eventLocation'] ?? '',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Description',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.eventData['eventDescription'] ?? '',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
                   ),
-                  child: Image.network(widget.data["image"], fit: BoxFit.cover),
                 ),
               ),
-              Positioned(
-                top: 25,
-                child: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 45,
-                left: 8,
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_month_outlined, size: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${formatDate(widget.data["datetime"])}",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+              const SizedBox(height: 24),
+              Center(
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton.icon(
+                        onPressed: _toggleRsvp,
+                        icon: Icon(_isRsvped ? Icons.check : Icons.add),
+                        label: Text(_isRsvped ? 'Cancel RSVP' : 'RSVP'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Icon(Icons.access_time_outlined, size: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${formatTime(widget.data["datetime"])}",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                bottom: 20,
-                left: 8,
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${widget.data["location"]}",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.data["name"],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const Icon(Icons.share),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.data["description"],
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "${widget.data["participants"].length} people are attending.",
-                  style: const TextStyle(
-                    color: kLightGreen,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "Special Guests ",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "${widget.data["guests"] == "" ? "None" : widget.data["guests"]}",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "Sponsers ",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "${widget.data["sponsers"] == "" ? "None" : widget.data["sponsers"]}",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "More Info ",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Event Type : ${widget.data["isInPerson"] == true ? "In Person" : "Virtual"}",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Time : ${formatTime(widget.data["datetime"])}",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Location : ${widget.data["location"]}",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _launchUrl(
-                      "https://www.google.com/maps/search/?api=1&query=${widget.data["location"]}",
-                    );
-                  },
-                  icon: const Icon(Icons.map),
-                  label: const Text("Open in Google Maps"),
-                ),
-                const SizedBox(height: 8),
-                isRSVPedEvent
-                    ? SizedBox(
-                        height: 50,
-                        width: double.infinity,
-                        child: MaterialButton(
-                          color: kLightGreen,
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("You are attending this event."),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Attending Event",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                      )
-                    : SizedBox(
-                        height: 50,
-                        width: double.infinity,
-                        child: MaterialButton(
-                          color: kLightGreen,
-                          onPressed: () {
-                            rsvpEvent(
-                              widget.data["participants"],
-                              widget.data["id"],
-                            ).then((value) {
-                              if (value) {
-                                setState(() {
-                                  isRSVPedEvent = true;
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("RSVP Successful !!!"),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Something went worng. Try Agian.",
-                                    ),
-                                  ),
-                                );
-                              }
-                            });
-                          },
-                          child: const Text(
-                            "RSVP Event",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
-  }
-}
-
-Future<void> _launchUrl(String url) async {
-  if (!await launchUrl(Uri.parse(url))) {
-    throw Exception('Could not launch $url');
   }
 }

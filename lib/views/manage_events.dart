@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:event_management_app/constants/colors.dart';
-import 'package:event_management_app/database.dart';
+
 import 'package:event_management_app/views/edit_event_page.dart';
 import 'package:event_management_app/views/event_details.dart';
 import 'package:flutter/material.dart';
