@@ -1,9 +1,9 @@
+import 'package:event_management_app/views/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'views/login.dart';
-import 'views/home.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         stream: AuthService().authStateChanges,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return const Home();
+            return const HomePage();
           }
           return const LoginPage();
         },

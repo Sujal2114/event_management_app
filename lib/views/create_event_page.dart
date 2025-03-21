@@ -1,8 +1,11 @@
-import 'dart:io';
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:intl/intl.dart';
+import 'dart:typed_data';
 import '../constants/colors.dart';
 import '../containers/custom_headtext.dart';
 import '../containers/custom_input_form.dart';
@@ -21,7 +24,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
   final _locationController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  File? _imageFile;
+  List<int>? _webImage;
+  String? _imageName;
   bool _isLoading = false;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -29,7 +33,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime(2025),
+      lastDate: DateTime(2030),
     );
     if (picked != null) {
       setState(() {
@@ -51,11 +55,20 @@ class _CreateEventPageState extends State<CreateEventPage> {
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    final html.FileUploadInputElement input = html.FileUploadInputElement();
+    input.accept = 'image/*';
+    input.click();
+
+    await input.onChange.first;
+    if (input.files!.isNotEmpty) {
+      final file = input.files![0];
+      _imageName = file.name;
+      final reader = html.FileReader();
+      reader.readAsArrayBuffer(file);
+
+      await reader.onLoad.first;
       setState(() {
-        _imageFile = File(image.path);
+        _webImage = (reader.result as List<int>).toList();
       });
     }
   }
@@ -64,7 +77,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
     if (!_formKey.currentState!.validate() ||
         _selectedDate == null ||
         _selectedTime == null ||
-        _imageFile == null) {
+        _webImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Please fill all fields and select an image')),
@@ -72,17 +85,19 @@ class _CreateEventPageState extends State<CreateEventPage> {
       return;
     }
 
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
     });
 
     try {
       // Upload image to Firebase Storage
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('event_images')
-          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await storageRef.putFile(_imageFile!);
+      final storageRef = FirebaseStorage.instance.ref().child('event_images').child(
+          '${DateTime.now().millisecondsSinceEpoch}_${_imageName ?? 'image.jpg'}');
+      await storageRef.putData(Uint8List.fromList(_webImage!),
+          SettableMetadata(contentType: 'image/jpeg'));
+
       final imageUrl = await storageRef.getDownloadURL();
 
       // Create event document in Firestore
@@ -103,24 +118,26 @@ class _CreateEventPageState extends State<CreateEventPage> {
         'createdAt': Timestamp.now(),
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Event created successfully!')),
-        );
-        Navigator.pop(context);
-      }
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Event created successfully!')),
+      );
+      Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating event: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating event: $e')),
+      );
     }
   }
 
@@ -190,19 +207,34 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 },
               ),
               const SizedBox(height: 16),
-              ListTile(
-                title: Text(_selectedDate == null
-                    ? 'Select Date'
-                    : 'Date: ${_selectedDate!.toLocal().toString().split(' ')[0]}'),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: () => _selectDate(context),
+              ElevatedButton(
+                onPressed: () => _selectDate(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: Text(
+                  _selectedDate == null
+                      ? 'Select Date'
+                      : 'Date: ${DateFormat('MMM dd, yyyy').format(_selectedDate!)}',
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
-              ListTile(
-                title: Text(_selectedTime == null
-                    ? 'Select Time'
-                    : 'Time: ${_selectedTime!.format(context)}'),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _selectTime(context),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _selectTime(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: Text(
+                  _selectedTime == null
+                      ? 'Select Time'
+                      : 'Time: ${_selectedTime!.format(context)} ${DateFormat('a').format(DateTime(2023, 1, 1, _selectedTime!.hour, _selectedTime!.minute))}',
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -211,13 +243,14 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   backgroundColor: Colors.blue,
                 ),
                 child:
-                    Text(_imageFile == null ? 'Select Image' : 'Change Image'),
+                    Text(_webImage == null ? 'Select Image' : 'Change Image'),
               ),
-              if (_imageFile != null) ...[
+              if (_webImage != null) ...[
                 const SizedBox(height: 8),
                 AspectRatio(
                   aspectRatio: 16 / 9,
-                  child: Image.file(_imageFile!, fit: BoxFit.cover),
+                  child: Image.memory(Uint8List.fromList(_webImage!),
+                      fit: BoxFit.cover),
                 ),
               ],
               const SizedBox(height: 24),

@@ -77,11 +77,12 @@ class _HomePageState extends State<HomePage> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),
                         child: EventContainer(
-                          eventName: eventData['eventName'] ?? '',
-                          eventDate: eventData['eventDate']?.toDate() ??
-                              DateTime.now(),
-                          eventLocation: eventData['eventLocation'] ?? '',
-                          eventDescription: eventData['eventDescription'] ?? '',
+                          eventName: eventData['name'] ?? '',
+                          eventDate:
+                              eventData['date']?.toDate() ?? DateTime.now(),
+                          eventLocation: eventData['location'] ?? '',
+                          eventDescription: eventData['description'] ?? '',
+                          eventImage: eventData['image'] ?? '',
                           onTap: () {
                             Navigator.push(
                               context,
@@ -123,7 +124,7 @@ class _HomePageState extends State<HomePage> {
           if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const ManageEvents()),
+              MaterialPageRoute(builder: (context) => const ManageEventsPage()),
             );
           } else if (index == 2) {
             // Navigator.push(

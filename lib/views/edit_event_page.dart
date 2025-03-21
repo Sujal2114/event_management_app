@@ -8,13 +8,27 @@ import '../containers/custom_headtext.dart';
 import '../containers/custom_input_form.dart';
 
 class EditEventPage extends StatefulWidget {
-  final String eventId;
-  final Map<String, dynamic> eventData;
+  final String docID;
+  final String image;
+  final String name;
+  final String desc;
+  final String loc;
+  final DateTime datetime;
+  final List<dynamic> guests;
+  final List<dynamic> sponsers;
+  final bool isInPerson;
 
   const EditEventPage({
     Key? key,
-    required this.eventId,
-    required this.eventData,
+    required this.docID,
+    required this.image,
+    required this.name,
+    required this.desc,
+    required this.loc,
+    required this.datetime,
+    required this.guests,
+    required this.sponsers,
+    required this.isInPerson,
   }) : super(key: key);
 
   @override
@@ -35,17 +49,13 @@ class _EditEventPageState extends State<EditEventPage> {
   @override
   void initState() {
     super.initState();
-    _eventNameController =
-        TextEditingController(text: widget.eventData['name']);
-    _descriptionController =
-        TextEditingController(text: widget.eventData['description']);
-    _locationController =
-        TextEditingController(text: widget.eventData['location']);
-    _currentImageUrl = widget.eventData['imageUrl'];
+    _eventNameController = TextEditingController(text: widget.name);
+    _descriptionController = TextEditingController(text: widget.desc);
+    _locationController = TextEditingController(text: widget.loc);
+    _currentImageUrl = widget.image;
 
-    final DateTime eventDateTime = widget.eventData['dateTime'].toDate();
-    _selectedDate = eventDateTime;
-    _selectedTime = TimeOfDay.fromDateTime(eventDateTime);
+    _selectedDate = widget.datetime;
+    _selectedTime = TimeOfDay.fromDateTime(widget.datetime);
   }
 
   @override
@@ -131,7 +141,7 @@ class _EditEventPageState extends State<EditEventPage> {
       // Update event document in Firestore
       await FirebaseFirestore.instance
           .collection('events')
-          .doc(widget.eventId)
+          .doc(widget.docID)
           .update({
         'name': _eventNameController.text,
         'description': _descriptionController.text,

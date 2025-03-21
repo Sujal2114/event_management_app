@@ -1,72 +1,89 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:event_management_app/constants/colors.dart';
-import 'package:event_management_app/database.dart';
-import 'package:event_management_app/saved_data.dart';
-import 'package:event_management_app/views/event_details.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
+import '../containers/event_container.dart';
+import 'event_details.dart';
 
-class RSVPEvents extends StatefulWidget {
-  const RSVPEvents({super.key});
+class RsvpEvents extends StatefulWidget {
+  const RsvpEvents({super.key});
 
   @override
-  State<RSVPEvents> createState() => _RSVPEventsState();
+  State<RsvpEvents> createState() => _RsvpEventsState();
 }
 
-class _RSVPEventsState extends State<RSVPEvents> {
-  List<QueryDocumentSnapshot> events = [];
-  List<Map<String, dynamic>> userEvents = [];
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    refresh();
-    super.initState();
-  }
-
-  void refresh() {
-    String userId = SavedData.getUserId();
-    getAllEvents().then((value) {
-      events = value.docs;
-      for (var event in events) {
-        List<dynamic> participants = (event.data() as Map<String, dynamic>)?['participants'] ?? [];
-
-        if (participants.contains(userId)) {
-          userEvents.add(event.data() as Map<String, dynamic>);
-        }
-        setState(() {
-          isLoading = false;
-        });
-      }
-    });
-  }
+class _RsvpEventsState extends State<RsvpEvents> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("RSVP Events")),
-      body: ListView.builder(
-        itemCount: userEvents.length,
-        itemBuilder: (context, index) => Card(
-          child: ListTile(
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        EventDetails(data: userEvents[index]))),
-            title: Text(
-              userEvents[index]["name"],
-              style: const TextStyle(color: Colors.white),
-            ),
-            subtitle: Text(
-              userEvents[index]["location"],
-              style: const TextStyle(color: Colors.white),
-            ),
-            trailing: const Icon(
-              Icons.check_circle,
-              color: kLightGreen,
-            ),
-          ),
+      appBar: AppBar(
+        title: const Text(
+          'RSVP Events',
+          style: TextStyle(color: Colors.white),
         ),
+        backgroundColor:
+            Colors.blue, // Using Flutter's built-in Colors instead of AppColors
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _firestore
+            .collection('events')
+            .where('rsvpUsers', arrayContains: _auth.currentUser?.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text(
+                'No RSVP events found',
+                style: TextStyle(fontSize: 16),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              final eventData =
+                  snapshot.data!.docs[index].data() as Map<String, dynamic>;
+              final eventId = snapshot.data!.docs[index].id;
+
+              return EventContainer(
+                eventName: eventData['name'] ?? '',
+                eventDescription: eventData['description'] ?? '',
+                eventDate: (eventData['date'] as Timestamp).toDate(),
+                eventLocation: eventData['location'] ?? '',
+                eventImage: eventData['imageUrl'] ?? '',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EventDetails(
+                        eventId: eventId,
+                        eventData: eventData,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
