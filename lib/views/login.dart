@@ -1,6 +1,7 @@
 import 'package:event_management_app/views/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -14,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String _errorMessage = '';
 
   @override
@@ -30,29 +32,32 @@ class _LoginPageState extends State<LoginPage> {
         _errorMessage = '';
       });
 
-      try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+      String email = _emailController.text.trim();
+      String password = _passwordController.text.trim();
 
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-      } on FirebaseAuthException catch (e) {
-        setState(() {
-          _errorMessage = e.message ?? 'An error occurred during login';
-        });
+      try {
+        AuthService authService = AuthService();
+        User? user = await authService.signInWithEmailAndPassword(email, password);
+
+        if (user != null) {
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        } else {
+          setState(() {
+            _errorMessage = 'Login failed. Check your credentials.';
+          });
+        }
       } catch (e) {
         setState(() {
-          _errorMessage = 'An unexpected error occurred';
+          _errorMessage = 'An error occurred: ${e.toString()}';
         });
       } finally {
         if (mounted) {
           setState(() {
-            _isLoading = false;
+            _isLoading = false; // Ensure loading stops in all cases
           });
         }
       }
@@ -93,7 +98,8 @@ class _LoginPageState extends State<LoginPage> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!value.contains('@')) {
+                    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$');
+                    if (!emailRegex.hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -102,11 +108,19 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -134,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator()
+                      ? const CircularProgressIndicator(color: Colors.white)
                       : const Text('Login'),
                 ),
                 const SizedBox(height: 16),
@@ -142,7 +156,10 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/signup');
                   },
-                  child: const Text('Don\'t have an account? Sign up'),
+                  child: const Text(
+                    "Don't have an account? Sign up",
+                    style: TextStyle(color: Colors.blue, fontSize: 16),
+                  ),
                 ),
               ],
             ),

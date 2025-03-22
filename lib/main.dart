@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'views/login.dart';
+import 'views/signup.dart';
 import 'services/auth_service.dart';
 import 'views/splashscreen.dart';
 
@@ -29,7 +30,12 @@ class MyApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
-      home: const SplashScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignUpPage(),
+      },
     );
   }
 }
