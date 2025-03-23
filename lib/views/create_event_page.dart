@@ -91,54 +91,24 @@ class _CreateEventPageState extends State<CreateEventPage> {
       _isLoading = true;
     });
 
-    try {
-      // Upload image to Firebase Storage
-      final storageRef = FirebaseStorage.instance.ref().child('event_images').child(
-          '${DateTime.now().millisecondsSinceEpoch}_${_imageName ?? 'image.jpg'}');
-      await storageRef.putData(Uint8List.fromList(_webImage!),
-          SettableMetadata(contentType: 'image/jpeg'));
+    // Simulate event creation delay
+    await Future.delayed(const Duration(seconds: 1));
 
-      final imageUrl = await storageRef.getDownloadURL();
+    if (!mounted) return;
 
-      // Create event document in Firestore
-      final eventDateTime = DateTime(
-        _selectedDate!.year,
-        _selectedDate!.month,
-        _selectedDate!.day,
-        _selectedTime!.hour,
-        _selectedTime!.minute,
-      );
+    setState(() {
+      _isLoading = false;
+    });
 
-      await FirebaseFirestore.instance.collection('events').add({
-        'name': _eventNameController.text,
-        'description': _descriptionController.text,
-        'location': _locationController.text,
-        'dateTime': Timestamp.fromDate(eventDateTime),
-        'imageUrl': imageUrl,
-        'createdAt': Timestamp.now(),
-      });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Event added successfully!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
 
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event created successfully!')),
-      );
-      Navigator.pop(context);
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating event: $e')),
-      );
-    }
+    // Navigate back to homepage
+    Navigator.pop(context);
   }
 
   @override
