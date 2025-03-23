@@ -5,12 +5,20 @@ import 'package:event_management_app/containers/format_datetime.dart';
 
 class EventDetails extends StatefulWidget {
   final String eventId;
-  final Map<String, dynamic> eventData;
+  final DateTime eventDate;
+  final String eventName;
+  final String eventLocation;
+  final String eventDescription;
+  final String imageUrl;
 
   const EventDetails({
     Key? key,
     required this.eventId,
-    required this.eventData,
+    required this.eventDate,
+    required this.eventName,
+    required this.eventLocation,
+    required this.eventDescription,
+    required this.imageUrl,
   }) : super(key: key);
 
   @override
@@ -111,7 +119,7 @@ class _EventDetailsState extends State<EventDetails> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.eventData['eventName'] ?? '',
+                widget.eventName,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -120,9 +128,9 @@ class _EventDetailsState extends State<EventDetails> {
               const SizedBox(height: 16),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: widget.eventData['imageUrl'] != null
+                child: widget.imageUrl.isNotEmpty
                     ? Image.network(
-                        widget.eventData['imageUrl']!,
+                        widget.imageUrl,
                         width: double.infinity,
                         height: 200,
                         fit: BoxFit.cover,
@@ -162,10 +170,7 @@ class _EventDetailsState extends State<EventDetails> {
                           const Icon(Icons.calendar_today),
                           const SizedBox(width: 8),
                           Text(
-                            formatDateTime(
-                              widget.eventData['eventDate']?.toDate() ??
-                                  DateTime.now(),
-                            ),
+                            formatDateTime(widget.eventDate),
                             style: const TextStyle(fontSize: 16),
                           ),
                         ],
@@ -177,7 +182,7 @@ class _EventDetailsState extends State<EventDetails> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              widget.eventData['eventLocation'] ?? '',
+                              widget.eventLocation,
                               style: const TextStyle(fontSize: 16),
                             ),
                           ),
@@ -193,7 +198,7 @@ class _EventDetailsState extends State<EventDetails> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        widget.eventData['eventDescription'] ?? '',
+                        widget.eventDescription,
                         style: const TextStyle(fontSize: 16),
                       ),
                     ],

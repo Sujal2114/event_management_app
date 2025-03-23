@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen>
             stream: AuthService().authStateChanges,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                return const HomePage();
+                return HomePage();
               }
               return const LoginPage();
             },

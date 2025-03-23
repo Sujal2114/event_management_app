@@ -22,7 +22,12 @@ class PopularItem extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => EventDetails(
               eventId: event.id,
-              eventData: eventData,
+              eventDate: (eventData['date'] as Timestamp).toDate(),
+              eventName: eventData['name'] ?? 'Untitled Event',
+              eventLocation: eventData['location'] ?? 'Location not specified',
+              eventDescription:
+                  eventData['description'] ?? 'No description available',
+              imageUrl: eventData['imageUrl'] ?? '',
             ),
           ),
         );

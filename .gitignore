@@ -8,6 +8,10 @@
 .buildlog/
 .history
 .svn/
+functions/
+node_modules/
+package-lock.json
+yarn.lock
 migrate_working_dir/
 
 # IntelliJ related
