@@ -106,7 +106,7 @@ class _EditEventPageState extends State<EditEventPage> {
     if (!_formKey.currentState!.validate() ||
         _selectedDate == null ||
         _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).rshowSnackBar(
         const SnackBar(content: Text('Please fill all required fields')),
       );
       return;
@@ -153,13 +153,13 @@ class _EditEventPageState extends State<EditEventPage> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).rshowSnackBar(
           const SnackBar(content: Text('Event updated successfully')),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).rshowSnackBar(
           SnackBar(content: Text('Error updating event: $e')),
         );
       }

@@ -47,129 +47,166 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('events').snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text("Error fetching events"));
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-                child: Text("No events available",
-                    style: TextStyle(fontSize: 18)));
-          }
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.only(left: 20, top: 20, right: 20),
+            alignment: Alignment.topLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Hey Sujal",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Let's Discover Your Events",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[800],
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder(
+              stream:
+                  FirebaseFirestore.instance.collection('events').snapshots(),
+              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error fetching events"));
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                      child: Text("No events available",
+                          style: TextStyle(fontSize: 18)));
+                }
 
-          var events = snapshot.data!.docs;
-          return ListView.builder(
-            itemCount: events.length,
-            padding: EdgeInsets.symmetric(vertical: 15, horizontal: 16),
-            itemBuilder: (context, index) {
-              var event = events[index];
+                var events = snapshot.data!.docs;
+                return ListView.builder(
+                  itemCount: events.length,
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 16),
+                  itemBuilder: (context, index) {
+                    var event = events[index];
 
-              return Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                margin: EdgeInsets.only(bottom: 20),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EventDetails(
-                          eventId: event.id,
-                          eventDate: event['Date'].toDate(),
-                          eventName: event['Event Name'] ?? '',
-                          eventLocation: event['Location'] ?? '',
-                          eventDescription: event['Description'] ?? '',
-                          imageUrl: event['Image'] ?? '',
-                        ),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ClipRRect(
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(20)),
-                        child: Image.network(
-                          event['Image'],
-                          height: 200,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                            height: 200,
-                            color: Colors.grey[200],
-                            child: Icon(Icons.broken_image,
-                                size: 80, color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              event['Event Name'],
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                    return Card(
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      margin: EdgeInsets.only(bottom: 20),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EventDetails(
+                                eventId: event.id,
+                                eventDate: event['Date'].toDate(),
+                                eventName: event['Event Name'] ?? '',
+                                eventLocation: event['Location'] ?? '',
+                                eventDescription: event['Description'] ?? '',
+                                imageUrl: event['Image'] ?? '',
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Icon(Icons.location_on,
-                                    color: Colors.blueAccent, size: 20),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    event['Location'],
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20)),
+                              child: Image.network(
+                                event['Image'],
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                  height: 200,
+                                  color: Colors.grey[200],
+                                  child: Icon(Icons.broken_image,
+                                      size: 80, color: Colors.grey),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    event['Event Name'],
                                     style: TextStyle(
-                                        fontSize: 16, color: Colors.grey[700]),
-                                    maxLines: 1,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.calendar_today,
-                                    color: Colors.blueAccent, size: 20),
-                                SizedBox(width: 8),
-                                Text(
-                                  event['Date']
-                                      .toDate()
-                                      .toLocal()
-                                      .toString()
-                                      .split('.')[0],
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.blueAccent),
-                                ),
-                              ],
+                                  SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.location_on,
+                                          color: Colors.blueAccent, size: 20),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          event['Location'],
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.grey[700]),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.calendar_today,
+                                          color: Colors.blueAccent, size: 20),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        event['Date']
+                                            .toDate()
+                                            .toLocal()
+                                            .toString()
+                                            .split('.')[0],
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.blueAccent),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
 
       // Floating Hover Button

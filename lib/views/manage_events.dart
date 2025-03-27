@@ -90,13 +90,13 @@ class ManageEventsPage extends StatelessWidget {
                               .doc(eventDoc.id)
                               .delete();
 
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(context).rshowSnackBar(
                             const SnackBar(
                               content: Text('Event deleted successfully'),
                             ),
                           );
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(context).rshowSnackBar(
                             SnackBar(
                               content: Text('Error deleting event: $e'),
                               backgroundColor: Colors.red,
